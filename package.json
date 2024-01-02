@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "webpack-dev-server --mode development --open",
+    "dev": "webpack serve --hot --mode=development",
     "build": "webpack build --mode production",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prettier": "prettier -w ./src",
@@ -21,6 +21,7 @@
     "@babel/preset-react": "^7.18.6",
     "@babel/runtime": "^7.18.6",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
+    "@svgr/webpack": "^8.1.0",
     "@tailwindcss/forms": "^0.5.3",
     "@types/react": "^18.2.6",
     "@types/react-dom": "^18.2.4",
@@ -33,6 +34,7 @@
     "css-minimizer-webpack-plugin": "^5.0.1",
     "cssnano": "^6.0.2",
     "cssnano-preset-default": "^6.0.2",
+    "esbuild-loader": "^4.0.2",
     "eslint": "^8.19.0",
     "eslint-plugin-react": "^7.30.1",
     "eslint-plugin-react-hooks": "^4.6.0",
@@ -53,7 +55,7 @@
     "webpack": "^5.73.0",
     "webpack-bundle-analyzer": "^4.10.1",
     "webpack-cli": "^4.10.0",
-    "webpack-dev-server": "^4.9.3"
+    "webpack-dev-server": "^4.15.1"
   },
   "dependencies": {
     "@types/node": "^20.5.2",

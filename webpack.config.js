@@ -1,14 +1,14 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CompressionPlugin = require('compression-webpack-plugin');
+// const CompressionPlugin = require('compression-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const isDevelopment = process.env.NODE_ENV !== 'production';
-const WebpackBundleAnalyzer =
-  require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const TerserPlugin = require('terser-webpack-plugin');
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-
+// const WebpackBundleAnalyzer =
+//   require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+// const TerserPlugin = require('terser-webpack-plugin');
+const { EsbuildPlugin } = require('esbuild-loader');
+console.log({ isDevelopment });
 module.exports = {
   entry: ['./src/index'], // 設置入口
   //   entry: './src/index.tsx',
@@ -48,22 +48,47 @@ module.exports = {
         test: /\.css$/i,
         use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
       },
+      // {
+      //   test: /\.(js|jsx)$/,
+      //   exclude: /node_modules/,
+      //   include: [path.resolve(__dirname, './src')],
+      //   use: {
+      //     loader: 'babel-loader',
+      //   },
+      // },
       {
-        test: /\.(js|jsx)$/,
-        exclude: /node_modules/,
-        include: [path.resolve(__dirname, './src')],
-        use: {
-          loader: 'babel-loader',
+        test: /\.js$/,
+        loader: 'esbuild-loader',
+        options: {
+          loader: 'jsx',
+          target: 'es2015',
+          jsx: 'automatic',
         },
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
         include: path.resolve(__dirname, 'src/img'),
         type: 'asset/resource',
-        // 載入圖片 替代 file-loader
-        // options: {
-        //   name: 'static/media/[name].[hash].[ext]',
-        // },
+        generator: {
+          filename: 'static/images/[hash][ext]',
+        },
+      },
+      {
+        test: /\.svg$/i,
+        type: 'asset',
+        resourceQuery: /url/, // *.svg?url => 作為圖片使用 ( css 中使用 )
+        generator: {
+          filename: 'static/icon/[hash][ext]',
+        },
+      },
+      {
+        test: /\.svg$/i,
+        issuer: /\.jsx?$/,
+        resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
+        use: ['@svgr/webpack'],
+        generator: {
+          filename: 'static/icon/[hash][ext]',
+        },
       },
     ],
   },
@@ -86,6 +111,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       filename: './index.html', // 要使用的模板
       template: 'public/index.html', // 匯出檔案的名稱。
+      inject: 'body',
       // favicon: 'public/favicon.ico',
     }),
     new MiniCssExtractPlugin({
@@ -111,7 +137,13 @@ module.exports = {
     // 開啟或關閉下一個選項： minimizer
     minimize: true,
     // 設定要用的 minimizer ，比如 terser 或是用來壓縮 css 的 css-minimizer-webpack-plugin
-    minimizer: [new TerserPlugin({}), new CssMinimizerPlugin({})],
+    // minimizer: [new TerserPlugin({}), new CssMinimizerPlugin({})],
+    minimizer: [
+      new EsbuildPlugin({
+        target: 'es2015', // Syntax to transpile to (see options below for possible values)
+        css: true,
+      }),
+    ],
     // 要不要有一個獨立的檔案來放 webpack 自己必要的程式碼
     // 因為這個檔案同時也會帶有必要的 module 的資訊，所以有時為了 cache 就必需要獨立出來
     runtimeChunk: 'single',
@@ -151,10 +183,10 @@ module.exports = {
   },
   devServer: {
     static: './', // 存取靜態資源的目錄 cra 設定為 public
-    port: 3010,
+    port: 8000,
     historyApiFallback: true, // 在SPA頁面中，依賴HTML5的history模式 配合react-router-dom使用
     host: 'localhost', // 預設是 localhost，設定則可讓外網存取
-    // compress: true, // 使用 gzip 壓縮
+    compress: true, // 使用 gzip 壓縮
     hot: true, // 打開 HMR
     open: true, // 打開瀏覽器
   },
@@ -164,3 +196,4 @@ module.exports = {
 };
 // tree shaking 待配置
 // terser
+// esbuild-loader
