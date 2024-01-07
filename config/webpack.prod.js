@@ -3,36 +3,25 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-const ESLintPlugin = require('eslint-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const WebpackBundleAnalyzer =
   require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 
 // const CompressionPlugin = require('compression-webpack-plugin');
-// const { EsbuildPlugin } = require('esbuild-loader');
 
-const smp = new SpeedMeasurePlugin();
-const isDevelopment = process.env.NODE_ENV !== 'production';
 
 const webpackConfig = {
-  entry: ['./src/index'], // 設置入口
+  entry: ['../src/index'], // 設置入口
   //   entry: './src/index.tsx',
   output: {
-    // filename: '[name].bundle.js',
-    filename: isDevelopment ? 'js/[name].[chunkhash:8].js' : 'js/[name].js',
-    // chunkFilename: isEnvProduction
-    //   ? 'js/[name].[contenthash:8].chunk.js'
-    //   : isEnvDevelopment && 'js/[name].chunk.js',
-    chunkFilename: isDevelopment
-      ? 'js/[name].chunk.js'
-      : 'js/[name].[contenthash:8].chunk.js',
-    path: path.resolve(__dirname, 'build'),
+    filename: 'js/[name].js',
+    chunkFilename: 'js/[name].[contenthash:8].chunk.js',
+    path: path.resolve(__dirname, '../build'),
     // 用 __dirname 取得當前環境的路徑再由 path.resolve() 將相對路徑或路徑片段轉為絕對路徑，以確保在不同作業系統底下都能產出正確的路徑位置
     clean: true,
   },
-  mode: isDevelopment ? 'development' : 'production',
-  devtool: isDevelopment ? 'cheap-module-source-map' : false,
+  mode: 'production',
+  devtool: 'source-map',
   module: {
     rules: [
       {
@@ -130,8 +119,8 @@ const webpackConfig = {
       // favicon: 'public/favicon.ico',
     }),
     new MiniCssExtractPlugin({
-      filename: isDevelopment ? 'css/[name].[hash].css' : 'css/[name].css',
-      chunkFilename: isDevelopment ? 'css/[id].[hash].css' : 'css/[id].css',
+      filename: 'css/[name].css',
+      chunkFilename: 'css/[id].css',
     }), // 因為每次建置的應用程式都應該是唯一的所以 production 不需要加 hash
     // new CompressionPlugin({
     //   // filename: '[path].gz[query]', // 目標文件名稱
@@ -141,15 +130,13 @@ const webpackConfig = {
     //   minRatio: 0.8, // 最小壓縮比達到0.8時才會被壓縮
     //   // https://juejin.cn/post/7008072984858460196
     // }),
-    new ESLintPlugin({
-      context: path.resolve(__dirname, 'src'), // 只檢查 src 底下的檔案
-    }),
+ 
     isDevelopment && new ReactRefreshWebpackPlugin(),
     // isDevelopment && new WebpackBundleAnalyzer(),
   ].filter(Boolean),
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(__dirname, '../src'),
     },
     // symlinks: false, // 未使用到 npm link 時不建立符號連結，減少解析工作量
     extensions: ['.js'],
@@ -215,31 +202,13 @@ const webpackConfig = {
       },
     },
   },
-  // 不會輸出資源，在記憶體內編譯打包
-  devServer: {
-    static: './', // 存取靜態資源的目錄 cra 設定為 public
-    port: 8000,
-    historyApiFallback: true, // 在SPA頁面中，依賴HTML5的history模式 配合react-router-dom使用
-    host: 'localhost', // 域名，預設是 localhost
-    compress: true, // 使用 gzip 壓縮
-    hot: true, // 打開 HMR
-    open: true, // 打開瀏覽器
-  },
   cache: {
     type: 'filesystem',
   },
 };
 
-//  解決 mini-css-extract-plugin 顯示未註冊問題  // https://github.com/stephencookdev/speed-measure-webpack-plugin/issues/167#issuecomment-1318684127
-const cssPluginIndex = webpackConfig.plugins.findIndex(
-  (e) => e.constructor.name === 'MiniCssExtractPlugin',
-);
-console.log(cssPluginIndex);
-const cssPlugin = webpackConfig.plugins[cssPluginIndex];
-const configToExport = smp.wrap(webpackConfig);
-configToExport.plugins[cssPluginIndex] = cssPlugin;
 
-module.exports = configToExport;
+module.exports = webpackConfig;
 
 // tree shaking 待配置
 // terser

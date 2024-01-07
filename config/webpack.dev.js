@@ -5,41 +5,37 @@ const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin'
 const TerserPlugin = require('terser-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const WebpackBundleAnalyzer =
-  require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
+// const WebpackBundleAnalyzer =
+//   require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 // const CompressionPlugin = require('compression-webpack-plugin');
 // const { EsbuildPlugin } = require('esbuild-loader');
 
 const smp = new SpeedMeasurePlugin();
-const isDevelopment = process.env.NODE_ENV !== 'production';
 
 const webpackConfig = {
-  entry: ['./src/index'], // 設置入口
+  entry: ['../src/index'], // 設置入口
   //   entry: './src/index.tsx',
   output: {
     // filename: '[name].bundle.js',
-    filename: isDevelopment ? 'js/[name].[chunkhash:8].js' : 'js/[name].js',
+    filename: 'js/main.[chunkhash:8].js',
     // chunkFilename: isEnvProduction
     //   ? 'js/[name].[contenthash:8].chunk.js'
     //   : isEnvDevelopment && 'js/[name].chunk.js',
-    chunkFilename: isDevelopment
-      ? 'js/[name].chunk.js'
-      : 'js/[name].[contenthash:8].chunk.js',
-    path: path.resolve(__dirname, 'build'),
+    chunkFilename: 'js/[name].chunk.js',
+    path: undefined,
     // 用 __dirname 取得當前環境的路徑再由 path.resolve() 將相對路徑或路徑片段轉為絕對路徑，以確保在不同作業系統底下都能產出正確的路徑位置
-    clean: true,
   },
-  mode: isDevelopment ? 'development' : 'production',
-  devtool: isDevelopment ? 'cheap-module-source-map' : false,
+  mode: 'development',
+  devtool: 'cheap-module-source-map',
   module: {
     rules: [
       {
         test: /\.s[ac]ss$/i,
         exclude: /node_modules/,
         use: [
-          MiniCssExtractPlugin.loader,
+          'style-loader',
           {
             loader: 'css-loader',
             options: {
@@ -58,7 +54,7 @@ const webpackConfig = {
       {
         test: /\.(js|jsx)$/,
         exclude: /node_modules/,
-        include: [path.resolve(__dirname, './src')],
+        include: [path.resolve(__dirname, '../src')],
         use: {
           loader: 'babel-loader',
         },
@@ -84,9 +80,7 @@ const webpackConfig = {
       {
         test: /\.(png|jpe?g|gif|webp)$/,
         type: 'asset',
-        generator: {
-          filename: 'images/[hash][ext]',
-        },
+
         parser: {
           dataUrlCondition: {
             // 小於 10kb 圖片轉 base64 可減少 request 但size會變大一點
@@ -98,26 +92,17 @@ const webpackConfig = {
       {
         test: /\.(ttf|woff2?)$/,
         type: 'asset/resource',
-        generator: {
-          filename: 'fonts/[hash][ext]',
-        },
       },
       {
         test: /\.svg$/i,
         type: 'asset',
         resourceQuery: /url/, // *.svg?url => 作為圖片使用 ( css 中使用 )
-        generator: {
-          filename: 'icon/[hash][ext]',
-        },
       },
       {
         test: /\.svg$/i,
         issuer: /\.jsx?$/,
         resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
         use: ['@svgr/webpack'],
-        generator: {
-          filename: 'icon/[hash][ext]',
-        },
       },
     ],
   },
@@ -125,13 +110,13 @@ const webpackConfig = {
     // HtmlWebpackPlugin 可以自動產生 index.html 與綁定檔案 script 會加上 defer 屬性
     new HtmlWebpackPlugin({
       filename: './index.html', // 要使用的模板
-      template: 'public/index.html', // 匯出檔案的名稱。
+      template: path.resolve(__dirname, '../public/index.html'), // 匯出檔案的名稱。
       inject: 'body',
       // favicon: 'public/favicon.ico',
     }),
     new MiniCssExtractPlugin({
-      filename: isDevelopment ? 'css/[name].[hash].css' : 'css/[name].css',
-      chunkFilename: isDevelopment ? 'css/[id].[hash].css' : 'css/[id].css',
+      filename: 'css/[name].[hash].css',
+      chunkFilename: 'css/[id].[hash].css',
     }), // 因為每次建置的應用程式都應該是唯一的所以 production 不需要加 hash
     // new CompressionPlugin({
     //   // filename: '[path].gz[query]', // 目標文件名稱
@@ -142,10 +127,9 @@ const webpackConfig = {
     //   // https://juejin.cn/post/7008072984858460196
     // }),
     new ESLintPlugin({
-      context: path.resolve(__dirname, 'src'), // 只檢查 src 底下的檔案
+      context: path.resolve(__dirname, '../src'), // 只檢查 src 底下的檔案
     }),
-    isDevelopment && new ReactRefreshWebpackPlugin(),
-    // isDevelopment && new WebpackBundleAnalyzer(),
+    new ReactRefreshWebpackPlugin(),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -234,7 +218,6 @@ const webpackConfig = {
 const cssPluginIndex = webpackConfig.plugins.findIndex(
   (e) => e.constructor.name === 'MiniCssExtractPlugin',
 );
-console.log(cssPluginIndex);
 const cssPlugin = webpackConfig.plugins[cssPluginIndex];
 const configToExport = smp.wrap(webpackConfig);
 configToExport.plugins[cssPluginIndex] = cssPlugin;
