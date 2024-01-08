@@ -5,34 +5,31 @@ const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin'
 const TerserPlugin = require('terser-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const WebpackBundleAnalyzer =
-  require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
+const os = require('os');
 
 // const CompressionPlugin = require('compression-webpack-plugin');
+// const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
+// const WebpackBundleAnalyzer =
+//   require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 // const { EsbuildPlugin } = require('esbuild-loader');
+// const smp = new SpeedMeasurePlugin();
 
-const smp = new SpeedMeasurePlugin();
 const isDevelopment = process.env.NODE_ENV !== 'production';
+const threads = os.cpus().length; // cpu核心數
 
 const webpackConfig = {
   entry: ['./src/index'], // 設置入口
-  //   entry: './src/index.tsx',
   output: {
-    // filename: '[name].bundle.js',
-    filename: isDevelopment ? 'js/[name].[chunkhash:8].js' : 'js/[name].js',
-    // chunkFilename: isEnvProduction
-    //   ? 'js/[name].[contenthash:8].chunk.js'
-    //   : isEnvDevelopment && 'js/[name].chunk.js',
+    filename: isDevelopment ? 'js/[name].[contenthash:8].js' : 'js/[name].js',
     chunkFilename: isDevelopment
       ? 'js/[name].chunk.js'
       : 'js/[name].[contenthash:8].chunk.js',
+    assetModuleFilename: 'media/[hash:10][ext][query]',
     path: path.resolve(__dirname, 'build'),
-    // 用 __dirname 取得當前環境的路徑再由 path.resolve() 將相對路徑或路徑片段轉為絕對路徑，以確保在不同作業系統底下都能產出正確的路徑位置
     clean: true,
   },
   mode: isDevelopment ? 'development' : 'production',
-  devtool: isDevelopment ? 'cheap-module-source-map' : false,
+  devtool: isDevelopment ? 'cheap-module-source-map' : 'source-map',
   module: {
     rules: [
       {
@@ -58,10 +55,21 @@ const webpackConfig = {
       {
         test: /\.(js|jsx)$/,
         exclude: /node_modules/,
-        include: [path.resolve(__dirname, './src')],
-        use: {
-          loader: 'babel-loader',
-        },
+        use: [
+          {
+            loader: 'thread-loader', // 開啟多執行續
+            options: {
+              works: threads, // 執行續數量
+            },
+          },
+          {
+            loader: 'babel-loader',
+            options: {
+              cacheDirectory: true, // 開啟 babel cache
+              cacheCompression: false, // 關閉 cache 檔案的壓縮，可以加快編譯
+            },
+          },
+        ],
       },
       // {
       //   test: /\.js$/,
@@ -74,19 +82,15 @@ const webpackConfig = {
       // },
       // {
       //   test: /\.(png|svg|jpg|jpeg|gif)$/i,
-      //   include: path.resolve(__dirname, 'src/img'),
       //   type: 'asset/resource',
       //   generator: {
       //     // [ext] 代表副檔名
-      //     filename: 'images/[hash][ext]',
+      //     filename: 'images/[hash:10][ext]',
       //   },
       // },
       {
         test: /\.(png|jpe?g|gif|webp)$/,
         type: 'asset',
-        generator: {
-          filename: 'images/[hash][ext]',
-        },
         parser: {
           dataUrlCondition: {
             // 小於 10kb 圖片轉 base64 可減少 request 但size會變大一點
@@ -98,31 +102,36 @@ const webpackConfig = {
       {
         test: /\.(ttf|woff2?)$/,
         type: 'asset/resource',
-        generator: {
-          filename: 'fonts/[hash][ext]',
-        },
       },
       {
         test: /\.svg$/i,
         type: 'asset',
         resourceQuery: /url/, // *.svg?url => 作為圖片使用 ( css 中使用 )
-        generator: {
-          filename: 'icon/[hash][ext]',
-        },
       },
       {
         test: /\.svg$/i,
         issuer: /\.jsx?$/,
         resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
         use: ['@svgr/webpack'],
-        generator: {
-          filename: 'icon/[hash][ext]',
-        },
       },
     ],
   },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+    symlinks: false, // 未使用到 npm link 時不建立符號連結，減少解析工作量
+    extensions: ['.js'],
+    // 設定 webpack 要去找哪些副檔名的檔案 預設值是 ['.wasm', '.mjs', '.js', '.json'],
+  },
+  performance: {
+    hints: false, // 禁用性能提示 編譯生成的檔案大小超出了預設的大小限制也不會有提示
+    // maxEntrypointSize: 512000, // 限制入口點文件大小
+    // maxAssetSize: 512000, // 限制靜態資源文件的大小
+  },
+  // performance => https://stackoverflow.com/questions/49348365/webpack-4-size-exceeds-the-recommended-limit-244-kib
   plugins: [
-    // HtmlWebpackPlugin 可以自動產生 index.html 與綁定檔案 script 會加上 defer 屬性
+    // HtmlWebpackPlugin 可以自動產生 index.html 與綁定 js 等檔案
     new HtmlWebpackPlugin({
       filename: './index.html', // 要使用的模板
       template: 'public/index.html', // 匯出檔案的名稱。
@@ -143,34 +152,26 @@ const webpackConfig = {
     // }),
     new ESLintPlugin({
       context: path.resolve(__dirname, 'src'), // 只檢查 src 底下的檔案
+      exclude: 'node_modules',
+      cache: true,
+      cacheLocation: path.resolve(
+        __dirname,
+        'node_modules/.cache/.eslintcache',
+      ),
+      threads,
+      // failOnError
     }),
     isDevelopment && new ReactRefreshWebpackPlugin(),
     // isDevelopment && new WebpackBundleAnalyzer(),
   ].filter(Boolean),
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
-    },
-    // symlinks: false, // 未使用到 npm link 時不建立符號連結，減少解析工作量
-    extensions: ['.js'],
-    // 設定 webpack 要去找哪些副檔名的檔案 預設值是 ['.wasm', '.mjs', '.js', '.json'],
-  },
-  performance: {
-    hints: false, // 禁用性能提示 編譯生成的檔案大小超出了預設的大小限制也不會有提示
-    // maxEntrypointSize: 512000, // 限制入口點文件大小
-    // maxAssetSize: 512000, // 限制靜態資源文件的大小
-  },
-  // performance => https://stackoverflow.com/questions/49348365/webpack-4-size-exceeds-the-recommended-limit-244-kib
 
   optimization: {
     // 開啟或關閉下一個選項： minimizer
     minimize: true,
     // 設定要用的 minimizer ，比如 terser 或是用來壓縮 css 的 css-minimizer-webpack-plugin
     minimizer: [
-      new TerserPlugin({
-        parallel: true,
-      }),
-      new CssMinimizerPlugin({}),
+      new TerserPlugin({ parallel: threads }), // 預設： os.cpus().length - 1
+      new CssMinimizerPlugin(),
     ],
     // minimizer: [
     //   new EsbuildPlugin({
@@ -188,42 +189,43 @@ const webpackConfig = {
     usedExports: true, // development tree shaking
     // 這個選項預設可以控制 webpack 怎麼處理 dynamic import 產生的額外的檔案
     splitChunks: {
-      // 這邊的設定是一些通用的規則 折分module
-
-      // 如果一個 module 在兩個以上的不同的 chunk 有用到就拆分出來
       minChunks: 2,
-      // 拆出來的 chunk 至少要有這個大小 (單位是 bytes) ，否則就不拆
       minSize: 100000,
-      // 若拆開來的 chunk 超過這個大小就想辦法再拆小一點
       maxSize: 10000000,
       chunks: 'all',
-      // 可以自己手動設定檔案該怎麼拆 ( 最複雜 )
       cacheGroups: {
         vendors: {
-          // node_modules里的代码
           test: /[\\/]node_modules[\\/]/,
           chunks: 'all',
           // name: 'vendors', 一定不要定义固定的name
           priority: -10, // 优先级
           enforce: true,
+          reuseExistingChunk: true,
         },
         default: {
-          minChunks: 2,
+          minSize: 0, // 預設為 20 kb，為抽取共用 function 可以設定小一點
+          minChunks: 2, // 被引用兩次以上才抽取
           priority: -20,
           reuseExistingChunk: true,
         },
       },
     },
   },
-  // 不會輸出資源，在記憶體內編譯打包
   devServer: {
     static: './', // 存取靜態資源的目錄 cra 設定為 public
     port: 8000,
     historyApiFallback: true, // 在SPA頁面中，依賴HTML5的history模式 配合react-router-dom使用
-    host: 'localhost', // 域名，預設是 localhost
+    host: 'localhost', // 預設是 localhost，設定則可讓外網存取
     compress: true, // 使用 gzip 壓縮
-    hot: true, // 打開 HMR
+    hot: true, // 打開 HMR  ( js 要另外設定 loader ex: vue-loader / react-hot-loader ) 預設開啟
     open: true, // 打開瀏覽器
+    client: {
+      overlay: {
+        errors: true,
+        warnings: false,
+        runtimeErrors: true,
+      },
+    },
   },
   cache: {
     type: 'filesystem',
@@ -231,21 +233,14 @@ const webpackConfig = {
 };
 
 //  解決 mini-css-extract-plugin 顯示未註冊問題  // https://github.com/stephencookdev/speed-measure-webpack-plugin/issues/167#issuecomment-1318684127
-const cssPluginIndex = webpackConfig.plugins.findIndex(
-  (e) => e.constructor.name === 'MiniCssExtractPlugin',
-);
-console.log(cssPluginIndex);
-const cssPlugin = webpackConfig.plugins[cssPluginIndex];
-const configToExport = smp.wrap(webpackConfig);
-configToExport.plugins[cssPluginIndex] = cssPlugin;
+// const cssPluginIndex = webpackConfig.plugins.findIndex(
+//   (e) => e.constructor.name === 'MiniCssExtractPlugin',
+// );
+// const cssPlugin = webpackConfig.plugins[cssPluginIndex];
+// const configToExport = smp.wrap(webpackConfig);
+// configToExport.plugins[cssPluginIndex] = cssPlugin;
+module.exports = webpackConfig;
 
-module.exports = configToExport;
-
-// tree shaking 待配置
 // terser
 // esbuild-loader
-// dayjs 語言包移除
-// new webpack.ContextReplacementPlugin(
-//   /moment[/\\]locale$/,
-//   /zh-tw|en/
-// );  須符合 zh-tw 或 en 保留。
+// rules - oneof

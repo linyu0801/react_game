@@ -9,7 +9,6 @@ const WebpackBundleAnalyzer =
 
 // const CompressionPlugin = require('compression-webpack-plugin');
 
-
 const webpackConfig = {
   entry: ['../src/index'], // 設置入口
   //   entry: './src/index.tsx',
@@ -23,92 +22,94 @@ const webpackConfig = {
   mode: 'production',
   devtool: 'source-map',
   module: {
-    rules: [
-      {
-        test: /\.s[ac]ss$/i,
-        exclude: /node_modules/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          {
-            loader: 'css-loader',
-            options: {
-              importLoaders: 2,
-              // 2 => postcss-loader, sass-loader
+    rules: {
+      oneOf: [
+        {
+          test: /\.s[ac]ss$/i,
+          exclude: /node_modules/,
+          use: [
+            MiniCssExtractPlugin.loader,
+            {
+              loader: 'css-loader',
+              options: {
+                importLoaders: 2,
+                // 2 => postcss-loader, sass-loader
+              },
+            },
+            'postcss-loader',
+            'sass-loader',
+          ],
+        },
+        {
+          test: /\.css$/i,
+          use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
+        },
+        {
+          test: /\.(js|jsx)$/,
+          exclude: /node_modules/,
+          include: [path.resolve(__dirname, './src')],
+          use: {
+            loader: 'babel-loader',
+          },
+        },
+        // {
+        //   test: /\.js$/,
+        //   loader: 'esbuild-loader',
+        //   options: {
+        //     loader: 'jsx',
+        //     target: 'es2015',
+        //     jsx: 'automatic',
+        //   },
+        // },
+        // {
+        //   test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        //   include: path.resolve(__dirname, 'src/img'),
+        //   type: 'asset/resource',
+        //   generator: {
+        //     // [ext] 代表副檔名
+        //     filename: 'images/[hash][ext]',
+        //   },
+        // },
+        {
+          test: /\.(png|jpe?g|gif|webp)$/,
+          type: 'asset',
+          generator: {
+            filename: 'images/[hash][ext]',
+          },
+          parser: {
+            dataUrlCondition: {
+              // 小於 10kb 圖片轉 base64 可減少 request 但size會變大一點
+              maxSize: 10 * 1024,
             },
           },
-          'postcss-loader',
-          'sass-loader',
-        ],
-      },
-      {
-        test: /\.css$/i,
-        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
-      },
-      {
-        test: /\.(js|jsx)$/,
-        exclude: /node_modules/,
-        include: [path.resolve(__dirname, './src')],
-        use: {
-          loader: 'babel-loader',
         },
-      },
-      // {
-      //   test: /\.js$/,
-      //   loader: 'esbuild-loader',
-      //   options: {
-      //     loader: 'jsx',
-      //     target: 'es2015',
-      //     jsx: 'automatic',
-      //   },
-      // },
-      // {
-      //   test: /\.(png|svg|jpg|jpeg|gif)$/i,
-      //   include: path.resolve(__dirname, 'src/img'),
-      //   type: 'asset/resource',
-      //   generator: {
-      //     // [ext] 代表副檔名
-      //     filename: 'images/[hash][ext]',
-      //   },
-      // },
-      {
-        test: /\.(png|jpe?g|gif|webp)$/,
-        type: 'asset',
-        generator: {
-          filename: 'images/[hash][ext]',
-        },
-        parser: {
-          dataUrlCondition: {
-            // 小於 10kb 圖片轉 base64 可減少 request 但size會變大一點
-            maxSize: 10 * 1024,
+        // 音檔、影片檔也放 asset/resource
+        {
+          test: /\.(ttf|woff2?)$/,
+          type: 'asset/resource',
+          generator: {
+            filename: 'fonts/[hash][ext]',
           },
         },
-      },
-      // 音檔、影片檔也放 asset/resource
-      {
-        test: /\.(ttf|woff2?)$/,
-        type: 'asset/resource',
-        generator: {
-          filename: 'fonts/[hash][ext]',
+        {
+          test: /\.svg$/i,
+          type: 'asset',
+          resourceQuery: /url/, // *.svg?url => 作為圖片使用 ( css 中使用 )
+          generator: {
+            filename: 'icon/[hash][ext]',
+          },
         },
-      },
-      {
-        test: /\.svg$/i,
-        type: 'asset',
-        resourceQuery: /url/, // *.svg?url => 作為圖片使用 ( css 中使用 )
-        generator: {
-          filename: 'icon/[hash][ext]',
+        {
+          test: /\.svg$/i,
+          issuer: /\.jsx?$/,
+          resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
+          use: ['@svgr/webpack'],
+          generator: {
+            filename: 'icon/[hash][ext]',
+          },
         },
-      },
-      {
-        test: /\.svg$/i,
-        issuer: /\.jsx?$/,
-        resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
-        use: ['@svgr/webpack'],
-        generator: {
-          filename: 'icon/[hash][ext]',
-        },
-      },
-    ],
+      ],
+    },
   },
   plugins: [
     // HtmlWebpackPlugin 可以自動產生 index.html 與綁定檔案 script 會加上 defer 屬性
@@ -130,7 +131,7 @@ const webpackConfig = {
     //   minRatio: 0.8, // 最小壓縮比達到0.8時才會被壓縮
     //   // https://juejin.cn/post/7008072984858460196
     // }),
- 
+
     isDevelopment && new ReactRefreshWebpackPlugin(),
     // isDevelopment && new WebpackBundleAnalyzer(),
   ].filter(Boolean),
@@ -206,7 +207,6 @@ const webpackConfig = {
     type: 'filesystem',
   },
 };
-
 
 module.exports = webpackConfig;
 

@@ -20,91 +20,89 @@ const webpackConfig = {
   output: {
     // filename: '[name].bundle.js',
     filename: 'js/main.[chunkhash:8].js',
-    // chunkFilename: isEnvProduction
-    //   ? 'js/[name].[contenthash:8].chunk.js'
-    //   : isEnvDevelopment && 'js/[name].chunk.js',
     chunkFilename: 'js/[name].chunk.js',
-    path: undefined,
-    // 用 __dirname 取得當前環境的路徑再由 path.resolve() 將相對路徑或路徑片段轉為絕對路徑，以確保在不同作業系統底下都能產出正確的路徑位置
+    path: undefined, // 不會輸出資源，在記憶體內編譯打包
   },
   mode: 'development',
   devtool: 'cheap-module-source-map',
   module: {
-    rules: [
-      {
-        test: /\.s[ac]ss$/i,
-        exclude: /node_modules/,
-        use: [
-          'style-loader',
-          {
-            loader: 'css-loader',
-            options: {
-              importLoaders: 2,
-              // 2 => postcss-loader, sass-loader
+    rules: {
+      oneOf: [
+        {
+          test: /\.s[ac]ss$/i,
+          exclude: /node_modules/,
+          use: [
+            'style-loader',
+            {
+              loader: 'css-loader',
+              options: {
+                importLoaders: 2,
+                // 2 => postcss-loader, sass-loader
+              },
+            },
+            'postcss-loader',
+            'sass-loader',
+          ],
+        },
+        {
+          test: /\.css$/i,
+          use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
+        },
+        {
+          test: /\.(js|jsx)$/,
+          exclude: /node_modules/,
+          include: [path.resolve(__dirname, '../src')],
+          use: {
+            loader: 'babel-loader',
+          },
+        },
+        // {
+        //   test: /\.js$/,
+        //   loader: 'esbuild-loader',
+        //   options: {
+        //     loader: 'jsx',
+        //     target: 'es2015',
+        //     jsx: 'automatic',
+        //   },
+        // },
+        // {
+        //   test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        //   include: path.resolve(__dirname, 'src/img'),
+        //   type: 'asset/resource',
+        //   generator: {
+        //     // [ext] 代表副檔名
+        //     filename: 'images/[hash][ext]',
+        //   },
+        // },
+        {
+          test: /\.(png|jpe?g|gif|webp)$/,
+          type: 'asset',
+
+          parser: {
+            dataUrlCondition: {
+              // 小於 10kb 圖片轉 base64 可減少 request 但size會變大一點
+              maxSize: 10 * 1024,
             },
           },
-          'postcss-loader',
-          'sass-loader',
-        ],
-      },
-      {
-        test: /\.css$/i,
-        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
-      },
-      {
-        test: /\.(js|jsx)$/,
-        exclude: /node_modules/,
-        include: [path.resolve(__dirname, '../src')],
-        use: {
-          loader: 'babel-loader',
         },
-      },
-      // {
-      //   test: /\.js$/,
-      //   loader: 'esbuild-loader',
-      //   options: {
-      //     loader: 'jsx',
-      //     target: 'es2015',
-      //     jsx: 'automatic',
-      //   },
-      // },
-      // {
-      //   test: /\.(png|svg|jpg|jpeg|gif)$/i,
-      //   include: path.resolve(__dirname, 'src/img'),
-      //   type: 'asset/resource',
-      //   generator: {
-      //     // [ext] 代表副檔名
-      //     filename: 'images/[hash][ext]',
-      //   },
-      // },
-      {
-        test: /\.(png|jpe?g|gif|webp)$/,
-        type: 'asset',
-
-        parser: {
-          dataUrlCondition: {
-            // 小於 10kb 圖片轉 base64 可減少 request 但size會變大一點
-            maxSize: 10 * 1024,
-          },
+        // 音檔、影片檔也放 asset/resource
+        {
+          test: /\.(ttf|woff2?)$/,
+          type: 'asset/resource',
         },
-      },
-      // 音檔、影片檔也放 asset/resource
-      {
-        test: /\.(ttf|woff2?)$/,
-        type: 'asset/resource',
-      },
-      {
-        test: /\.svg$/i,
-        type: 'asset',
-        resourceQuery: /url/, // *.svg?url => 作為圖片使用 ( css 中使用 )
-      },
-      {
-        test: /\.svg$/i,
-        issuer: /\.jsx?$/,
-        resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
-        use: ['@svgr/webpack'],
-      },
-    ],
+        {
+          test: /\.svg$/i,
+          type: 'asset',
+          resourceQuery: /url/, // *.svg?url => 作為圖片使用 ( css 中使用 )
+        },
+        {
+          test: /\.svg$/i,
+          issuer: /\.jsx?$/,
+          resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
+          use: ['@svgr/webpack'],
+        },
+      ],
+    },
   },
   plugins: [
     // HtmlWebpackPlugin 可以自動產生 index.html 與綁定檔案 script 會加上 defer 屬性
@@ -154,7 +152,6 @@ const webpackConfig = {
       new TerserPlugin({
         parallel: true,
       }),
-      new CssMinimizerPlugin({}),
     ],
     // minimizer: [
     //   new EsbuildPlugin({
