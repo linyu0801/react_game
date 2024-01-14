@@ -5,9 +5,11 @@ module.exports = (api) => {
         '@babel/preset-env',
         {
           modules: false,
+          useBuiltIns: 'usage', // 自動按需引入 polyfill
+          corejs: '3.35.0',
         },
       ],
-      ["@babel/preset-react", { "runtime": "automatic" }]
+      ['@babel/preset-react', { runtime: 'automatic' }],
     ],
     plugins: [
       '@babel/plugin-syntax-dynamic-import', // 支援動態導入（dynamic import）語法
