@@ -1,7 +1,3 @@
-
-const PageA = () => {
-  console.log('pagea');
-  return <div>pagea</div>;
-};
+const PageA = () => <div>pagea</div>;
 
 export default PageA;

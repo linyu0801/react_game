@@ -3,7 +3,12 @@ module.exports = {
     browser: true,
     es2021: true,
   },
-  extends: ['airbnb', 'prettier'],
+  extends: [
+    'eslint:recommended',
+    'plugin:react/recommended',
+    'airbnb',
+    'prettier',
+  ],
   overrides: [
     {
       env: {
@@ -27,7 +32,7 @@ module.exports = {
     'react/jsx-uses-react': 'off',
     'react/react-in-jsx-scope': 'off',
     'no-unused-vars': 'warn',
-    'no-console': 'off',
+    'no-console': 'warn',
     'react/function-component-definition': [
       2,
       {
@@ -36,5 +41,10 @@ module.exports = {
       },
     ],
   },
-  plugins: ['import'], // 允許動態引入
+  plugins: ['import', 'react'], // 允許動態引入
+  settings: {
+    react: {
+      version: 'detect',
+    },
+  },
 };
