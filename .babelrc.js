@@ -5,8 +5,6 @@ module.exports = (api) => {
         '@babel/preset-env',
         {
           modules: false,
-          useBuiltIns: 'usage', // 自動按需引入 polyfill
-          corejs: '3.35.0',
         },
       ],
       ['@babel/preset-react', { runtime: 'automatic' }],
