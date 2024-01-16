@@ -6,7 +6,6 @@ const TerserPlugin = require('terser-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const os = require('os');
-const CopyPlugin = require('copy-webpack-plugin');
 
 // const CompressionPlugin = require('compression-webpack-plugin');
 // const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
@@ -154,9 +153,11 @@ const webpackConfig = (env, argv) => {
       // }),
       new ESLintPlugin({
         context: path.resolve(__dirname, 'src'), // 只檢查 src 底下的檔案
-        threads,
-        cache: false,
-        // failOnError
+        // threads,
+        cache: true,
+        extensions: ['js', 'mjs', 'jsx', 'ts', 'tsx'],
+        ignore: true,
+        useEslintrc: true,
       }),
       // !isDevelopment &&
       //   new CopyPlugin({
@@ -172,7 +173,7 @@ const webpackConfig = (env, argv) => {
       //     ],
       //   }), // 處理 public 內靜態資源 ex :favicon.ico
       isDevelopment && new ReactRefreshWebpackPlugin({ overlay: false }),
-      !isDevelopment&& new WebpackBundleAnalyzer(),
+      !isDevelopment && new WebpackBundleAnalyzer(),
     ].filter(Boolean),
 
     optimization: {
@@ -216,12 +217,6 @@ const webpackConfig = (env, argv) => {
             priority: 40,
             reuseExistingChunk: true,
           },
-          // corejsVendor: {
-          //   test: /[\\/]node_modules[\\/](core-js)[\\/]/,
-          //   name: 'vendor-corejs',
-          //   chunks: 'all',
-          //   reuseExistingChunk: true,
-          // },
           vendors: {
             test: /[\\/]node_modules[\\/]/,
             chunks: 'all',
