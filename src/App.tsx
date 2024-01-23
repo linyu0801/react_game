@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { BrowserRouter, useRoutes } from 'react-router-dom';
 import routerConfig from './router/index';
-import './index.scss';
+import './index.css';
 
 const Router = () => useRoutes(routerConfig);
 

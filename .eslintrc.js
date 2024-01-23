@@ -1,12 +1,14 @@
+const path = require('path');
 module.exports = {
   env: {
     browser: true,
     es2021: true,
   },
   extends: [
-    'plugin:react/recommended',
-    'airbnb',
+    'airbnb-typescript',
     'prettier',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:prettier/recommended',
   ],
   overrides: [
     {
@@ -19,31 +21,29 @@ module.exports = {
       },
     },
   ],
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
-    ecmaFeatures: {
-      jsx: true,
-    },
     sourceType: 'module',
+    project: './tsconfig.json',
   },
+  plugins: ['@typescript-eslint', 'import', 'react'],
   rules: {
-    'react/jsx-filename-extension': [1, { extensions: ['.js', '.jsx'] }],
-    'react/jsx-uses-react': 'off',
-    'react/react-in-jsx-scope': 'off',
-    'no-unused-vars': 'warn',
-    'no-console': 'warn',
-    'react/function-component-definition': [
-      2,
-      {
-        namedComponents: ['arrow-function', 'function-declaration'],
-        unnamedComponents: 'arrow-function',
-      },
-    ],
+    'react/jsx-props-no-spreading': 'off',
+    '@typescript-eslint/no-var-requires': 0,
   },
-  plugins: ['import', 'react'], // 允許動態引入
   settings: {
-    react: {
-      version: 'detect',
-    },
+    // 'import/resolver': {
+    //   webpack: {
+    //     config: {
+    //       resolve: {
+    //         alias: {
+    //           '@': path.join(__dirname, 'src'),
+    //         },
+    //         extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    //       },
+    //     },
+    //   },
+    // },
   },
 };

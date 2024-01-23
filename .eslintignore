@@ -1,3 +1,4 @@
 # 讓 eslint extention 不會報錯
 
 build
+.eslintrc.js

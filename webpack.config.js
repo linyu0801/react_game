@@ -7,18 +7,11 @@ const ESLintPlugin = require('eslint-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const os = require('os');
 
-// const CompressionPlugin = require('compression-webpack-plugin');
-// const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
-const WebpackBundleAnalyzer =
-  require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-// const { EsbuildPlugin } = require('esbuild-loader');
-// const smp = new SpeedMeasurePlugin();
-
 const threads = os.cpus().length; // cpu核心數
 const webpackConfig = (env, argv) => {
   const isDevelopment = argv.mode !== 'production';
   return {
-    entry: ['./src/index'], // 設置入口
+    entry: ['./src/index.tsx'], // 設置入口
     output: {
       filename: isDevelopment ? 'js/[name].js' : 'js/[name].[contenthash:8].js',
       chunkFilename: isDevelopment
@@ -36,25 +29,14 @@ const webpackConfig = (env, argv) => {
         {
           test: /\.s[ac]ss$/i,
           exclude: /node_modules/,
-          use: [
-            MiniCssExtractPlugin.loader,
-            {
-              loader: 'css-loader',
-              options: {
-                importLoaders: 2,
-                // 2 => postcss-loader, sass-loader
-              },
-            },
-            'postcss-loader',
-            'sass-loader',
-          ],
+          use: [MiniCssExtractPlugin.loader, 'css-loader'],
         },
         {
           test: /\.css$/i,
-          use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
+          use: [MiniCssExtractPlugin.loader, 'css-loader'],
         },
         {
-          test: /\.(js|jsx)$/,
+          test: /\.(js|jsx|ts|tsx)$/,
           exclude: /node_modules/,
           use: [
             {
@@ -72,23 +54,6 @@ const webpackConfig = (env, argv) => {
             },
           ],
         },
-        // {
-        //   test: /\.js$/,
-        //   loader: 'esbuild-loader',
-        //   options: {
-        //     loader: 'jsx',
-        //     target: 'es2015',
-        //     jsx: 'automatic',
-        //   },
-        // },
-        // {
-        //   test: /\.(png|svg|jpg|jpeg|gif)$/i,
-        //   type: 'asset/resource',
-        //   generator: {
-        //     // [ext] 代表副檔名
-        //     filename: 'images/[hash:10][ext]',
-        //   },
-        // },
         {
           test: /\.(png|jpe?g|gif|webp)$/,
           type: 'asset',
@@ -126,7 +91,7 @@ const webpackConfig = (env, argv) => {
         '@': path.resolve(__dirname, 'src'),
       },
       symlinks: false, // 未使用到 npm link 時不建立符號連結，減少解析工作量
-      extensions: ['.js'],
+      extensions: ['.tsx', '.ts', '.js'],
       // 設定 webpack 要去找哪些副檔名的檔案 預設值是 ['.wasm', '.mjs', '.js', '.json'],
     },
     performance: false, // 關閉效能提示，提升打包速度,
@@ -142,15 +107,8 @@ const webpackConfig = (env, argv) => {
       new MiniCssExtractPlugin({
         filename: isDevelopment ? 'css/[name].[hash].css' : 'css/[name].css',
         chunkFilename: isDevelopment ? 'css/[id].[hash].css' : 'css/[id].css',
-      }), // 因為每次建置的應用程式都應該是唯一的所以 production 不需要加 hash
-      // new CompressionPlugin({
-      //   // filename: '[path].gz[query]', // 目標文件名稱
-      //   algorithm: 'gzip', // 使用gzip 壓縮
-      //   test: /\.js$|\.css$|\.html$|\.eot?.+$|\.ttf?.+$|\.woff?.+$/, // 壓縮文件類型
-      //   threshold: 102400, // 對超過 100kb的數據壓縮
-      //   minRatio: 0.8, // 最小壓縮比達到0.8時才會被壓縮
-      //   // https://juejin.cn/post/7008072984858460196
-      // }),
+      }),
+
       new ESLintPlugin({
         context: path.resolve(__dirname, 'src'), // 只檢查 src 底下的檔案
         // threads,
@@ -159,21 +117,7 @@ const webpackConfig = (env, argv) => {
         ignore: true,
         useEslintrc: true,
       }),
-      // !isDevelopment &&
-      //   new CopyPlugin({
-      //     patterns: [
-      //       {
-      //         from: path.resolve(__dirname, 'public'),
-      //         to: path.resolve(__dirname, 'build'),
-      //         globOptions: {
-      //           // 忽略 index.html
-      //           ignore: ['**/index.html'],
-      //         },
-      //       },
-      //     ],
-      //   }), // 處理 public 內靜態資源 ex :favicon.ico
       isDevelopment && new ReactRefreshWebpackPlugin({ overlay: false }),
-      !isDevelopment && new WebpackBundleAnalyzer(),
     ].filter(Boolean),
 
     optimization: {
@@ -184,24 +128,12 @@ const webpackConfig = (env, argv) => {
         new TerserPlugin({ parallel: threads }), // 預設： os.cpus().length - 1
         new CssMinimizerPlugin(),
       ],
-      // minimizer: [
-      //   new EsbuildPlugin({
-      //     target: 'es2015', // Syntax to transpile to (see options below for possible values)
-      //     css: true,
-      //   }),
-      // ],
-      // 要不要有一個獨立的檔案來放 webpack 自己必要的程式碼
-      // 因為這個檔案同時也會帶有必要的 module 的資訊，所以有時為了 cache 就必需要獨立出來
+
       runtimeChunk: {
         name: (entrypoint) => `runtime~${entrypoint.name}.js`,
       },
-      // runtimeChunk: 'single',
-      // webpack 內部會給每個 module 一個 id ，用在 webpack 自己識別每個 module 上
-      // 預設在線上環境是用載入的順序當 id ，用 hashed 的話就會用路徑產生一個 hash 當 id ，可以避免 id 改動
-      // 這個 `hashed` 選項在 webpack v5 時被另一個更好的參數 `deterministic` 取代了
       moduleIds: 'deterministic', // hashed
       usedExports: true, // development tree shaking
-      // 這個選項預設可以控制 webpack 怎麼處理 dynamic import 產生的額外的檔案
       splitChunks: {
         minChunks: 2,
         minSize: 100000,
@@ -258,17 +190,4 @@ const webpackConfig = (env, argv) => {
   };
 };
 
-//  解決 mini-css-extract-plugin 顯示未註冊問題  // https://github.com/stephencookdev/speed-measure-webpack-plugin/issues/167#issuecomment-1318684127
-// const cssPluginIndex = webpackConfig.plugins.findIndex(
-//   (e) => e.constructor.name === 'MiniCssExtractPlugin',
-// );
-// const cssPlugin = webpackConfig.plugins[cssPluginIndex];
-// const configToExport = smp.wrap(webpackConfig);
-// configToExport.plugins[cssPluginIndex] = cssPlugin;
 module.exports = webpackConfig;
-
-// terser
-// esbuild-loader
-// rules - oneof
-// runtimeChunk https://www.youtube.com/watch?v=NtRXmBKmR2M&list=PLmOn9nNkQxJHJY0qweOe4DIBWNAu6Oxrh&index=49
-// eslint cache

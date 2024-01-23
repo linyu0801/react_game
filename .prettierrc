@@ -6,5 +6,10 @@
   "jsxSingleQuote": true,
   "bracketSpacing": true,
   "trailingComma": "all",
-  "singleAttributePerLine": true
+  "singleAttributePerLine": true,
+  "useTabs": false,
+  "arrowParens": "always",
+  "proseWrap": "never",
+  "htmlWhitespaceSensitivity": "strict",
+  "endOfLine": "auto"
 }
