@@ -6,8 +6,8 @@ const TerserPlugin = require('terser-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const os = require('os');
-
 const threads = os.cpus().length; // cpu核心數
+
 const webpackConfig = (env, argv) => {
   const isDevelopment = argv.mode !== 'production';
   return {

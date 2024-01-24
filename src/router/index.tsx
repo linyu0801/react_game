@@ -1,7 +1,7 @@
 import { lazy } from 'react';
 
-const Home = lazy(() => import('../pages/Home'));
-const PageA = lazy(() => import('../pages/PageA'));
+const Home = lazy(() => import('@/pages/Home'));
+const PageA = lazy(() => import('@/pages/PageA'));
 
 const router = [
   {

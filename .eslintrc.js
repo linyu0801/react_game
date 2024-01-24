@@ -1,24 +1,21 @@
-const path = require('path');
+const allExtensions = ['.ts', '.tsx', '.d.ts', '.js', '.jsx', '.json'];
+
 module.exports = {
+  root: true,
   env: {
     browser: true,
     es2021: true,
+    node: true,
   },
   extends: [
     'airbnb-typescript',
-    'prettier',
     'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
   ],
   overrides: [
     {
-      env: {
-        node: true,
-      },
-      files: ['.eslintrc.{js,cjs}'],
-      parserOptions: {
-        sourceType: 'script',
-      },
+      files: ['*.js'],
+      extends: ['plugin:@typescript-eslint/disable-type-checked'],
     },
   ],
   parser: '@typescript-eslint/parser',
@@ -30,20 +27,21 @@ module.exports = {
   plugins: ['@typescript-eslint', 'import', 'react'],
   rules: {
     'react/jsx-props-no-spreading': 'off',
-    '@typescript-eslint/no-var-requires': 0,
+    '@typescript-eslint/no-var-requires': 'off',
+    'import/extensions': [
+      'error',
+      'ignorePackages',
+      {
+        '': 'never',
+        js: 'never',
+        mjs: 'never',
+        jsx: 'never',
+        ts: 'never',
+        tsx: 'never',
+      },
+    ],
   },
   settings: {
-    // 'import/resolver': {
-    //   webpack: {
-    //     config: {
-    //       resolve: {
-    //         alias: {
-    //           '@': path.join(__dirname, 'src'),
-    //         },
-    //         extensions: ['.js', '.jsx', '.ts', '.tsx'],
-    //       },
-    //     },
-    //   },
-    // },
+    'import/extensions': allExtensions,
   },
 };
