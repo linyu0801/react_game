@@ -8,6 +8,7 @@ module.exports = {
     node: true,
   },
   extends: [
+    'airbnb',
     'airbnb-typescript',
     'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
@@ -26,7 +27,11 @@ module.exports = {
   },
   plugins: ['@typescript-eslint', 'import', 'react'],
   rules: {
+    'react/react-in-jsx-scope': 'off',
+    'react/jsx-uses-react': 'off',
     'react/jsx-props-no-spreading': 'off',
+    'react/prop-types': 'off',
+    'react/no-array-index-key': 'warn',
     '@typescript-eslint/no-var-requires': 'off',
     'import/extensions': [
       'error',
