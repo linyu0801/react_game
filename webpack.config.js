@@ -6,8 +6,10 @@ const TerserPlugin = require('terser-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const os = require('os');
+
 const threads = os.cpus().length; // cpu核心數
 
+const imageInlineSizeLimit = 10 * 1024;
 const webpackConfig = (env, argv) => {
   const isDevelopment = argv.mode !== 'production';
   return {
@@ -26,11 +28,11 @@ const webpackConfig = (env, argv) => {
     devtool: isDevelopment ? 'cheap-module-source-map' : 'source-map',
     module: {
       rules: [
-        {
-          test: /\.s[ac]ss$/i,
-          exclude: /node_modules/,
-          use: [MiniCssExtractPlugin.loader, 'css-loader'],
-        },
+        // {
+        //   test: /\.s[ac]ss$/i,
+        //   exclude: /node_modules/,
+        //   use: [MiniCssExtractPlugin.loader, 'css-loader'],
+        // },
         {
           test: /\.css$/i,
           use: [MiniCssExtractPlugin.loader, 'css-loader'],
@@ -60,17 +62,16 @@ const webpackConfig = (env, argv) => {
           include: path.resolve(__dirname, 'src'),
           parser: {
             dataUrlCondition: {
-              // 小於 10kb 圖片轉 base64 可減少 request 但size會變大一點
-              maxSize: 10 * 1024,
+              maxSize: imageInlineSizeLimit,
             },
           },
         },
-        // 音檔、影片檔也放 asset/resource
-        {
-          test: /\.(ttf|woff2?)$/,
-          type: 'asset/resource',
-          include: path.resolve(__dirname, 'src'),
-        },
+        // // 音檔、影片檔也放 asset/resource
+        // {
+        //   test: /\.(ttf|woff2?)$/,
+        //   type: 'asset/resource',
+        //   include: path.resolve(__dirname, 'src'),
+        // },
         {
           test: /\.svg$/i,
           type: 'asset',
@@ -79,9 +80,25 @@ const webpackConfig = (env, argv) => {
         },
         {
           test: /\.svg$/i,
-          issuer: /\.jsx?$/,
+          issuer: /\.(js|jsx|tsx)?$/,
           resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
-          use: ['@svgr/webpack'],
+          use: [
+            {
+              loader: '@svgr/webpack',
+              options: {
+                typescript: true,
+                ext: 'tsx',
+                prettier: false,
+                svgo: false,
+                svgoConfig: {
+                  plugins: [{ removeViewBox: false }],
+                },
+                titleProp: true,
+                ref: true,
+              },
+            },
+            'file-loader',
+          ],
           include: path.resolve(__dirname, 'src'),
         },
       ],

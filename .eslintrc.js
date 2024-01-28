@@ -33,6 +33,13 @@ module.exports = {
     'react/prop-types': 'off',
     'react/no-array-index-key': 'warn',
     '@typescript-eslint/no-var-requires': 'off',
+    'no-use-before-define': 'off',
+    '@typescript-eslint/no-use-before-define': ['off'],
+    '@typescript-eslint/no-unused-vars': 'warn',
+    'no-param-reassign': [
+      'error',
+      { props: true, ignorePropertyModificationsFor: ['draft'] },
+    ],
     'import/extensions': [
       'error',
       'ignorePackages',
