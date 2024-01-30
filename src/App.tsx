@@ -12,8 +12,7 @@ const StyledContainer = styled.main`
   align-items: center;
   height: 100vh;
 `;
-function App() {
-  const GlobalStyle = createGlobalStyle`
+const GlobalStyle = createGlobalStyle`
   body {
     font-family: 'Noto Sans TC', sans-serif;
     background-color: ${(props) => props.theme.background};
@@ -21,7 +20,7 @@ function App() {
     margin: 0;
   }
 `;
-
+function App() {
   return (
     <ThemeProvider theme={themes.default}>
       <Suspense fallback={<div> loading...</div>}>

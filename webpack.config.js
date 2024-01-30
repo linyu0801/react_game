@@ -186,7 +186,7 @@ const webpackConfig = (env, argv) => {
     },
     devServer: {
       static: './', // 存取靜態資源的目錄 cra 設定為 public
-      port: 8000,
+      port: 8080,
       historyApiFallback: true, // 在SPA頁面中，依賴HTML5的history模式 配合react-router-dom使用
       host: 'localhost', // 預設是 localhost，設定則可讓外網存取
       compress: true, // 使用 gzip 壓縮
