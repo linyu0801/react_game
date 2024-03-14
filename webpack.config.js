@@ -11,12 +11,12 @@ const threads = os.cpus().length; // cpu核心數
 
 const imageInlineSizeLimit = 10 * 1024;
 const webpackConfig = (env, argv) => {
-  const isDevelopment = argv.mode !== 'production';
+  const isProduction = argv.mode !== 'development';
   return {
     entry: ['./src/index.tsx'], // 設置入口
     output: {
-      filename: isDevelopment ? 'js/[name].js' : 'js/[name].[contenthash:8].js',
-      chunkFilename: isDevelopment
+      filename: isProduction ? 'js/[name].js' : 'js/[name].[contenthash:8].js',
+      chunkFilename: isProduction
         ? 'js/[name].chunk.js'
         : 'js/[name].[contenthash:8].chunk.js',
 
@@ -24,8 +24,8 @@ const webpackConfig = (env, argv) => {
       path: path.resolve(__dirname, 'build'),
       clean: true,
     },
-    mode: isDevelopment ? 'development' : 'production',
-    devtool: isDevelopment ? 'cheap-module-source-map' : 'source-map',
+    mode: isProduction ? 'development' : 'production',
+    devtool: isProduction ? 'cheap-module-source-map' : 'source-map',
     module: {
       rules: [
         // {
@@ -122,8 +122,8 @@ const webpackConfig = (env, argv) => {
         // favicon: 'public/favicon.ico',
       }),
       new MiniCssExtractPlugin({
-        filename: isDevelopment ? 'css/[name].[hash].css' : 'css/[name].css',
-        chunkFilename: isDevelopment ? 'css/[id].[hash].css' : 'css/[id].css',
+        filename: isProduction ? 'css/[name].[hash].css' : 'css/[name].css',
+        chunkFilename: isProduction ? 'css/[id].[hash].css' : 'css/[id].css',
       }),
 
       new ESLintPlugin({
@@ -134,7 +134,7 @@ const webpackConfig = (env, argv) => {
         ignore: true,
         useEslintrc: true,
       }),
-      isDevelopment && new ReactRefreshWebpackPlugin({ overlay: false }),
+      isProduction && new ReactRefreshWebpackPlugin({ overlay: false }),
     ].filter(Boolean),
 
     optimization: {
@@ -151,6 +151,7 @@ const webpackConfig = (env, argv) => {
       },
       moduleIds: 'deterministic', // hashed
       usedExports: true, // development tree shaking
+      sideEffects: true,
       splitChunks: {
         minChunks: 2,
         minSize: 100000,

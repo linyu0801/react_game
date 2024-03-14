@@ -14,7 +14,7 @@
     "format": "prettier --write . --cache",
     "prepare": "husky install",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build --mode=production"
   },
   "keywords": [],
   "author": "",
