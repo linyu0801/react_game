@@ -7,14 +7,14 @@
   "scripts": {
     "start": "npm run dev",
     "server": "node server.js",
-    "dev": "webpack serve --mode=development",
-    "build": "webpack build --mode=production",
+    "dev": "cross-env NODE_ENV=development webpack serve",
+    "build": "cross-env NODE_ENV=production webpack",
     "prettier": "prettier -w ./src",
     "lint": "eslint --fix --ext=ts,tsx,js src/ --cache ",
     "format": "prettier --write . --cache",
     "prepare": "husky install",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build --mode=production"
+    "deploy": "gh-pages -d build "
   },
   "keywords": [],
   "author": "",
