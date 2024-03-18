@@ -28,6 +28,7 @@ function App() {
         <StyledContainer>
           <BrowserRouter>
             <Router />
+            <p>test Github Action</p>
           </BrowserRouter>
         </StyledContainer>
       </Suspense>{' '}
