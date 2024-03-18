@@ -1,19 +1,19 @@
 name: Deploy using Github Action
 
 on:
-  push:
+ push:
     branches: [ "master" ]
-  pull_request:
+ pull_request:
     branches: [ "master" ]
 
 jobs:
-  build:
+ build:
 
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x]
+        node-version: [18.x, 20.x, 22.x]
 
     steps:
     - uses: actions/checkout@v4
