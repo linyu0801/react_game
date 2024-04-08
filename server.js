@@ -26,28 +26,33 @@ io.on('connection', (socket) => {
   socket.on('join', (roomId) => {
     // 檢查房間是否已滿
 
-    if (users[roomId] && users[roomId] >= 2) {
+    if (users[roomId] && users[roomId].length >= 2) {
       // 假設最大人數為10
       socket.emit('join', {
         isSuccess: false,
       });
     } else {
-      const prevRoomCounts = users[roomId] || 0;
-      users[roomId] = prevRoomCounts + 1;
-      socket.emit('join', {
-        playerIndex: prevRoomCounts,
-        isSuccess: true,
-      });
+      if (!users[roomId]) {
+        users[roomId] = [];
+      }
+      const playerIndex = users[roomId].length || 0;
+      users[roomId].push(socket.id);
+      socket.emit('join', { playerIndex, isSuccess: true });
     }
     console.log(users, roomId);
   });
-  socket.on('chessDown', (chessId) => {
-    io.sockets.emit('chessDown', chessId);
+  socket.on('chessDown', (roomId, chessIndex) => {
+    const playerIndex = users[roomId].indexOf(socket.id);
+    io.sockets.emit('chessDown', { chessIndex, playerIndex });
   });
 
   socket.on('leave', (roomId) => {
     if (users[roomId]) {
-      users[roomId] -= 1;
+      users[roomId].forEach((userId, index) => {
+        if (userId === socket.id) {
+          users[roomId].splice(index, 1);
+        }
+      });
     }
   });
 });

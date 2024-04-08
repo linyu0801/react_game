@@ -5,17 +5,17 @@ import { RolesEnum } from '@/pages/Home/reducer';
 type Props = {
   currentRole: RolesEnum;
   winRole: number | false;
-  isGameEnd: boolean;
+  isGameOver: boolean;
 };
 
-function InfoSection({ currentRole, winRole, isGameEnd }: Props) {
+function InfoSection({ currentRole, winRole, isGameOver }: Props) {
   const otherPlayerName = '對方';
   const roleText =
     currentRole === RolesEnum.PLAYER_ONE ? '您' : otherPlayerName;
-  const isTie = isGameEnd && winRole === false;
+  const isTie = isGameOver && winRole === false;
   const winText = `遊戲結束，${winRole === RolesEnum.PLAYER_ONE ? '恭喜您' : otherPlayerName}獲勝`;
   const gameEndText = isTie ? '遊戲結束：平手' : winText;
-  const title = isGameEnd ? gameEndText : `輪到${roleText}選擇`;
+  const title = isGameOver ? gameEndText : `輪到${roleText}選擇`;
 
   return (
     <StyledInfoText>
