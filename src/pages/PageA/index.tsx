@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ReactDom from 'react-dom';
 import { io, Socket } from 'socket.io-client';
 
 function Main() {
@@ -31,6 +30,9 @@ function Main() {
       ws.on('getMessageLess', (message) => {
         console.log(message);
       });
+      ws.on('join', (message) => {
+        console.log(message);
+      });
     }
   };
 
@@ -41,11 +43,6 @@ function Main() {
   };
   return (
     <div>
-      <input
-        type='button'
-        value='連線'
-        onClick={connectWebSocket}
-      />
       <input
         type='button'
         value='連線'
@@ -70,6 +67,13 @@ function Main() {
         value='送出訊息，除了自己外所有人收到回傳'
         onClick={() => {
           sendMessage('getMessageLess');
+        }}
+      />
+      <input
+        type='button'
+        value='加入房間'
+        onClick={() => {
+          sendMessage('join');
         }}
       />
     </div>

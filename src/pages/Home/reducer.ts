@@ -1,36 +1,46 @@
 import { produce } from 'immer';
+import { Socket } from 'socket.io-client';
 import { WIN_STATUS_LIST } from '@/constants/ticTacToe';
 
-export enum Roles {
-  SELF,
-  OTHER_PLAYER,
+export enum RolesEnum {
+  PLAYER_ONE,
+  PLAYER_TWO,
 }
 
 type DispatchActionType =
   | { type: 'RESTART_GAME' }
-  | { type: 'SET_SELF_CHESS'; payload: number }
-  | { type: 'SET_OTHER_PLAYER_CHESS'; payload: number };
+  | { type: 'SET_PLAYER_ONE_CHESS'; payload: number }
+  | { type: 'SET_PLAYER_TWO_CHESS'; payload: number }
+  | { type: 'SET_ROLE'; payload: RolesEnum }
+  | { type: 'CHANGE_MODE'; payload: ModeType }
+  | { type: 'SET_SOCKET'; payload: Socket };
+
+type ModeType = 'single' | 'multi';
 
 type TicTacToeType = {
-  selfChess: number[];
-  otherPlayerChess: number[];
-  selfRemainSteps: number[][];
-  otherPlayerRemainSteps: number[][];
-  currentRole: Roles;
-  isSelfPlayerWin: boolean;
-  isOtherPlayerWin: boolean;
+  playOneChess: number[];
+  playTwoChess: number[];
+  playOneRemainSteps: number[][];
+  playTwoRemainSteps: number[][];
+  currentRole: RolesEnum;
+  isPlayerOneWin: boolean;
+  isPlayerTwoWin: boolean;
   isGameEnd: boolean;
+  mode: ModeType;
+  ws: Socket | null;
 };
 
-export const ticTacToeInitState = {
-  selfChess: [],
-  otherPlayerChess: [],
-  selfRemainSteps: [],
-  otherPlayerRemainSteps: [],
-  currentRole: Roles.SELF,
-  isSelfPlayerWin: false,
-  isOtherPlayerWin: false,
+export const ticTacToeInitState: TicTacToeType = {
+  playOneChess: [],
+  playTwoChess: [],
+  playOneRemainSteps: [],
+  playTwoRemainSteps: [],
+  currentRole: RolesEnum.PLAYER_ONE,
+  isPlayerOneWin: false,
+  isPlayerTwoWin: false,
   isGameEnd: false,
+  mode: 'single',
+  ws: null,
 };
 
 const getRemainSteps = (chesses: number[]) => {
@@ -46,25 +56,40 @@ const isSomeoneWin = (remainSteps: number[][]) => {
 export const reducer = produce(
   (draft: TicTacToeType, action: DispatchActionType) => {
     switch (action.type) {
-      case 'SET_SELF_CHESS': {
-        draft.selfChess.push(action.payload);
-        draft.selfRemainSteps = getRemainSteps(draft.selfChess);
-        draft.isSelfPlayerWin = isSomeoneWin(draft.selfRemainSteps);
-        draft.isGameEnd = draft.isSelfPlayerWin;
-        draft.currentRole = Roles.OTHER_PLAYER;
+      case 'SET_PLAYER_ONE_CHESS': {
+        draft.playOneChess.push(action.payload);
+        draft.playOneRemainSteps = getRemainSteps(draft.playOneChess);
+        draft.isPlayerOneWin = isSomeoneWin(draft.playOneRemainSteps);
+        draft.isGameEnd = draft.isPlayerOneWin;
+        if (draft.mode !== 'multi') {
+          draft.currentRole = RolesEnum.PLAYER_TWO;
+        }
         break;
       }
-      case 'SET_OTHER_PLAYER_CHESS': {
-        draft.otherPlayerChess.push(action.payload);
-        draft.otherPlayerRemainSteps = getRemainSteps(draft.otherPlayerChess);
-        draft.isOtherPlayerWin = isSomeoneWin(draft.otherPlayerRemainSteps);
-        draft.isGameEnd = draft.isOtherPlayerWin;
-        draft.currentRole = Roles.SELF;
+      case 'SET_PLAYER_TWO_CHESS': {
+        draft.playTwoChess.push(action.payload);
+        draft.playTwoRemainSteps = getRemainSteps(draft.playTwoChess);
+        draft.isPlayerTwoWin = isSomeoneWin(draft.playTwoRemainSteps);
+        draft.isGameEnd = draft.isPlayerTwoWin;
+        if (draft.mode !== 'multi') {
+          draft.currentRole = RolesEnum.PLAYER_ONE;
+        }
         break;
       }
-
+      case 'SET_ROLE': {
+        draft.currentRole = action.payload;
+        break;
+      }
+      case 'CHANGE_MODE': {
+        draft.mode = action.payload;
+        break;
+      }
       case 'RESTART_GAME': {
         Object.assign(draft, ticTacToeInitState);
+        break;
+      }
+      case 'SET_SOCKET': {
+        draft.ws = action.payload;
         break;
       }
       default:

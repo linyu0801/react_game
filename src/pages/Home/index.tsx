@@ -1,125 +1,138 @@
-import React, { useReducer } from 'react';
-import styled from 'styled-components';
-import { Roles, reducer, ticTacToeInitState } from './reducer';
-import { ReactComponent as CircleIcon } from '@/assets/circle.svg';
-import { ReactComponent as CloseIcon } from '@/assets/close.svg';
+import { useEffect, useReducer } from 'react';
+import { useParams } from 'react-router-dom';
+import { Socket, io } from 'socket.io-client';
+import { RolesEnum, reducer, ticTacToeInitState } from './reducer';
 import InfoSection from '@/components/InfoSection';
+import S from './style';
 
+type JoinRoomParams = {
+  isSuccess: boolean;
+  playerIndex?: RolesEnum;
+};
 const CHESS_TOTAL = 9;
 const chessNumbers = [...Array(CHESS_TOTAL)].map((_, i) => i + 1);
 
 function Home() {
   const [state, dispatch] = useReducer(reducer, ticTacToeInitState);
+  const { roomId } = useParams();
   const {
     currentRole,
-    isSelfPlayerWin,
-    isOtherPlayerWin,
-    selfChess,
-    otherPlayerChess,
+    isPlayerOneWin,
+    isPlayerTwoWin,
+    playOneChess,
+    playTwoChess,
+    mode,
+    ws,
   } = state;
+  console.log(currentRole);
+  const isMultiMode = mode === 'multi';
 
   const isGameEnd =
-    isSelfPlayerWin ||
-    isOtherPlayerWin ||
-    selfChess.length + otherPlayerChess.length === CHESS_TOTAL;
-  const winRole =
-    isGameEnd && (isSelfPlayerWin ? Roles.SELF : Roles.OTHER_PLAYER);
+    isPlayerOneWin ||
+    isPlayerTwoWin ||
+    playOneChess.length + playTwoChess.length === CHESS_TOTAL;
 
-  // console.log({ selfChess, otherPlayerChess, currentRole });
+  const winRole =
+    isGameEnd && (isPlayerOneWin ? RolesEnum.PLAYER_ONE : RolesEnum.PLAYER_TWO);
+
+  // console.log({ playOneChess, playTwoChess, currentRole });
   const handleChessClick = (chessNumber: number, disabled: boolean) => {
     if (isGameEnd || disabled) return;
-
-    if (currentRole === Roles.SELF) {
-      dispatch({ type: 'SET_SELF_CHESS', payload: chessNumber });
+    if (isMultiMode) {
+      ws!.emit('chessDown', chessNumber);
     } else {
-      dispatch({ type: 'SET_OTHER_PLAYER_CHESS', payload: chessNumber });
+      dispatchChessAction(currentRole, chessNumber);
     }
   };
 
   const restartGame = () => dispatch({ type: 'RESTART_GAME' });
 
+  const dispatchChessAction = (
+    currentPeople: RolesEnum,
+    chessNumber: number,
+  ) => {
+    if (currentPeople === RolesEnum.PLAYER_ONE) {
+      dispatch({ type: 'SET_PLAYER_ONE_CHESS', payload: chessNumber });
+    } else {
+      dispatch({ type: 'SET_PLAYER_TWO_CHESS', payload: chessNumber });
+    }
+  };
+
+  const initWebSocket = (socket: Socket) => {
+    let currentPeople = 0;
+    // 對 getMessage 設定監聽，如果 server 有透過 getMessage 傳送訊息，將會在此被捕捉
+    if (socket) {
+      socket.on('join', (message) => {
+        const { isSuccess, playerIndex }: JoinRoomParams = message;
+        if (typeof playerIndex === 'undefined' || !isSuccess) return;
+        currentPeople = playerIndex;
+        dispatch({ type: 'SET_ROLE', payload: playerIndex });
+        console.log('join', message);
+      });
+      socket.on('chessDown', (chessIndex) => {
+        console.log('chessDown', chessIndex);
+        dispatchChessAction(currentPeople, chessIndex);
+      });
+    }
+  };
+
+  useEffect(() => {
+    let socket: Socket;
+    if (roomId) {
+      dispatch({ type: 'CHANGE_MODE', payload: 'multi' });
+      socket = io('http://localhost:3000');
+      socket.on('connect', () => {
+        socket.emit('join', roomId);
+      });
+      initWebSocket(socket);
+      // setTimeout(() => {
+      //   socket.emit('join', roomId);
+      // }, 1000);
+
+      dispatch({ type: 'SET_SOCKET', payload: socket });
+    }
+    return () => {
+      if (socket) {
+        socket.emit('disconnect', roomId);
+      }
+    };
+  }, [roomId]);
+
+  const handleModeChange = () => {
+    const nextMode = isMultiMode ? 'multi' : 'single';
+    dispatch({ type: 'CHANGE_MODE', payload: nextMode });
+  };
+
   return (
-    <StyledContainer>
+    <S.Container>
       <InfoSection
         currentRole={currentRole}
         isGameEnd={isGameEnd}
         winRole={winRole}
       />
-      <StyledCheckerboard>
+      <S.ToggleModeButton onClick={handleModeChange}>
+        {isMultiMode ? '多人模式' : '單人模式'}
+      </S.ToggleModeButton>
+      <S.Checkerboard>
         {chessNumbers.map((number) => {
-          const isSelfPlayerChess = selfChess.includes(number);
-          const isOtherPlayerChess = otherPlayerChess.includes(number);
-          const disabled = isSelfPlayerChess || isOtherPlayerChess;
+          const hasSelfPlayerChess = playOneChess.includes(number);
+          const hasOtherPlayerChess = playTwoChess.includes(number);
+          const disabled = hasSelfPlayerChess || hasOtherPlayerChess;
           return (
-            <StyledChessElement
+            <S.Chess
               key={number}
               onClick={() => handleChessClick(number, disabled)}
               $disabled={disabled}
             >
-              {isSelfPlayerChess && <StyledCircleIcon />}
-              {isOtherPlayerChess && <StyledCloseIcon />}
-            </StyledChessElement>
+              {hasSelfPlayerChess && <S.CircleIcon />}
+              {hasOtherPlayerChess && <S.CloseIcon />}
+            </S.Chess>
           );
         })}
-      </StyledCheckerboard>
-      <StyledRestartButton onClick={restartGame}>
-        Restart Game
-      </StyledRestartButton>
-    </StyledContainer>
+      </S.Checkerboard>
+      <S.RestartButton onClick={restartGame}>Restart Game</S.RestartButton>
+    </S.Container>
   );
 }
 
 export default Home;
-
-const StyledContainer = styled.div`
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 16px;
-  background: white;
-  border-radius: 10px;
-`;
-
-const StyledCheckerboard = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  width: 100%;
-  margin-bottom: 20px;
-`;
-
-const StyledChessElement = styled.div<{ $disabled: boolean }>`
-  background: ${({ theme }) => theme.chess.normal};
-  border-radius: 16px;
-  padding: 16px;
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  &:hover {
-    background-color: ${({ $disabled, theme }) =>
-      $disabled ? theme.chess.normal : theme.chess.hover};
-  }
-`;
-
-const StyledCircleIcon = styled(CircleIcon)`
-  fill: white;
-  width: 80%;
-`;
-
-const StyledCloseIcon = styled(CloseIcon)`
-  fill: white;
-  width: 80%;
-`;
-
-const StyledRestartButton = styled.button`
-  background: ${({ theme }) => theme.button.normal};
-  color: ${({ theme }) => theme.color};
-  border: none;
-  border-radius: 10px;
-  width: 33%;
-  padding: 10px 16px;
-  &:hover {
-    background-color: ${({ theme }) => theme.button.hover};
-  }
-`;

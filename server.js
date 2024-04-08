@@ -20,35 +20,48 @@ const io = require('socket.io')(server, {
   },
 });
 
+const users = {};
+
 io.on('connection', (socket) => {
-  // 當有新玩家加入房間時
-  // socket.on('joinRoom', (roomId) => {
-  //   socket.join(roomId);
+  socket.on('join', (roomId) => {
+    // 檢查房間是否已滿
 
-  //   // 在房間中廣播玩家數量
-  //   io.to(roomId).emit(
-  //     'playersCount',
-  //     io.sockets.adapter.rooms.get(roomId)?.size,
-  //   );
-
-  //   // 檢查玩家數量是否達到遊戲開始條件
-  //   if (io.sockets.adapter.rooms.get(roomId)?.size === 2) {
-  //     // 開始遊戲，向房間內的所有玩家發送遊戲開始事件
-  //     io.to(roomId).emit('startGame');
-  //   }
-  // });
-  /* 只回傳給發送訊息的 client */
-  socket.on('getMessage', (message) => {
-    socket.emit('getMessage', message);
+    if (users[roomId] && users[roomId] >= 2) {
+      // 假設最大人數為10
+      socket.emit('join', {
+        isSuccess: false,
+      });
+    } else {
+      const prevRoomCounts = users[roomId] || 0;
+      users[roomId] = prevRoomCounts + 1;
+      socket.emit('join', {
+        playerIndex: prevRoomCounts,
+        isSuccess: true,
+      });
+    }
+    console.log(users, roomId);
+  });
+  socket.on('chessDown', (chessId) => {
+    io.sockets.emit('chessDown', chessId);
   });
 
-  /* 回傳給所有連結著的 client */
-  socket.on('getMessageAll', (message) => {
-    io.sockets.emit('getMessageAll', message);
-  });
-
-  /* 回傳給除了發送者外所有連結著的 client */
-  socket.on('getMessageLess', (message) => {
-    socket.broadcast.emit('getMessageLess', message);
+  socket.on('leave', (roomId) => {
+    if (users[roomId]) {
+      users[roomId] -= 1;
+    }
   });
 });
+//   /* 只回傳給發送訊息的 client */
+//   socket.on('getMessage', (message) => {
+//     socket.emit('getMessage', message);
+//   });
+
+//   /* 回傳給所有連結著的 client */
+//   socket.on('getMessageAll', (message) => {
+//     io.sockets.emit('getMessageAll', message);
+//   });
+
+//   /* 回傳給除了發送者外所有連結著的 client */
+//   socket.on('getMessageLess', (message) => {
+//     socket.broadcast.emit('getMessageLess', message);
+//   });

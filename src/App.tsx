@@ -10,13 +10,12 @@ const StyledContainer = styled.main`
   padding: 0 16px;
   display: flex;
   align-items: center;
-  height: 100vh;
 `;
 const GlobalStyle = createGlobalStyle`
   body {
     font-family: 'Noto Sans TC', sans-serif;
     background-color: ${(props) => props.theme.background};
-    height:100dvh;
+    min-height:100dvh;
     margin: 0;
   }
 `;
@@ -28,7 +27,6 @@ function App() {
         <StyledContainer>
           <BrowserRouter>
             <Router />
-            <p>test Github Action</p>
           </BrowserRouter>
         </StyledContainer>
       </Suspense>{' '}
