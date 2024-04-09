@@ -22,6 +22,7 @@ module.exports = {
 
     assetModuleFilename: 'media/[hash:10][ext][query]',
     path: path.resolve(__dirname, 'build'),
+    publicPath: '/build',
     clean: true,
   },
   mode: isDevelopment ? 'development' : 'production',
