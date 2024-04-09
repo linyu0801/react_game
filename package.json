@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "homepage": "https://linyu0801.github.io/react_game",
+  "homepage": ".",
   "scripts": {
     "start": "concurrently \"npm run dev\" \"npm run server\"",
     "server": "nodemon server.js",
