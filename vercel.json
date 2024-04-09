@@ -1,0 +1,9 @@
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
+  "functions": {
+    "server.js": {
+      "memory": 3009,
+      "maxDuration": 30
+    }
+  }
+}
