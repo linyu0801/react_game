@@ -7,7 +7,7 @@ export enum RolesEnum {
   PLAYER_TWO,
 }
 
-type DispatchActionType =
+export type DispatchActionType =
   | { type: 'RESTART_GAME' }
   | { type: 'SET_PLAYER_ONE_CHESS'; payload: number }
   | { type: 'SET_PLAYER_TWO_CHESS'; payload: number }
@@ -32,12 +32,12 @@ type TicTacToeType = {
 };
 
 export const ticTacToeInitState: TicTacToeType = {
+  currentRole: RolesEnum.PLAYER_ONE,
+  currentRound: RolesEnum.PLAYER_ONE,
   playOneChess: [],
   playTwoChess: [],
   playOneRemainSteps: [],
   playTwoRemainSteps: [],
-  currentRole: RolesEnum.PLAYER_ONE,
-  currentRound: RolesEnum.PLAYER_ONE,
   isPlayerOneWin: false,
   isPlayerTwoWin: false,
   isGameEnd: false,
@@ -89,7 +89,18 @@ export const reducer = produce(
         break;
       }
       case 'RESTART_GAME': {
-        Object.assign(draft, ticTacToeInitState);
+        draft.playOneChess = [];
+        draft.playTwoChess = [];
+        draft.playOneRemainSteps = [];
+        draft.playTwoRemainSteps = [];
+        draft.isPlayerOneWin = false;
+        draft.isPlayerTwoWin = false;
+        draft.isGameEnd = false;
+        // Object.assign(draft, {
+        //   ...ticTacToeInitState,
+        //   mode: draft.mode,
+        //   ws: draft.ws,
+        // });
         break;
       }
       case 'SET_SOCKET': {

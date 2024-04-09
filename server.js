@@ -55,6 +55,9 @@ io.on('connection', (socket) => {
       });
     }
   });
+  socket.on('restart', (roomId) => {
+    io.sockets.emit('restart', 'restart game!');
+  });
 });
 //   /* 只回傳給發送訊息的 client */
 //   socket.on('getMessage', (message) => {

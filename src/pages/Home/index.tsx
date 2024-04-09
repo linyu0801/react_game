@@ -1,14 +1,11 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useMemo, useReducer } from 'react';
 import { useParams } from 'react-router-dom';
 import { Socket, io } from 'socket.io-client';
 import { RolesEnum, reducer, ticTacToeInitState } from './reducer';
-import InfoSection from '@/components/InfoSection';
+import InfoSection from '@/pages/Home/InfoSection';
 import S from './style';
+import { ChessDownParams, JoinRoomParams, StatusEnum } from './type';
 
-type JoinRoomParams = {
-  isSuccess: boolean;
-  playerIndex?: RolesEnum;
-};
 const CHESS_COUNTS = 9;
 const chessNumbers = [...Array(CHESS_COUNTS)].map((_, i) => i + 1);
 
@@ -27,15 +24,16 @@ function Home() {
   } = state;
 
   const isMultiPlayerMode = mode === 'multi';
+  const isSomeoneWin = isPlayerOneWin || isPlayerTwoWin;
+  const isTie = playOneChess.length + playTwoChess.length === CHESS_COUNTS;
+  const isGameOver = isSomeoneWin || isTie;
 
-  const isGameOver =
-    isPlayerOneWin ||
-    isPlayerTwoWin ||
-    playOneChess.length + playTwoChess.length === CHESS_COUNTS;
-
-  const winRole =
-    isGameOver &&
-    (isPlayerOneWin ? RolesEnum.PLAYER_ONE : RolesEnum.PLAYER_TWO);
+  const winStatus: StatusEnum = useMemo(() => {
+    if (isTie) return StatusEnum.IS_TIE;
+    if (isPlayerOneWin) return StatusEnum.PLAYER_ONE_WIN;
+    if (isPlayerTwoWin) return StatusEnum.PLAYER_TWO_WIN;
+    return StatusEnum.IS_GAME_PROCESSING;
+  }, [isPlayerOneWin, isPlayerTwoWin, isTie]);
 
   const handleChessClick = (chessNumber: number, disabled: boolean) => {
     if (isGameOver || disabled) return;
@@ -46,7 +44,12 @@ function Home() {
     }
   };
 
-  const restartGame = () => dispatch({ type: 'RESTART_GAME' });
+  const restartGame = () => {
+    if (isMultiPlayerMode) {
+      ws?.emit('restart', roomId);
+    }
+    dispatch({ type: 'RESTART_GAME' });
+  };
 
   const dispatchChessAction = (role: RolesEnum, chessNumber: number) => {
     if (role === RolesEnum.PLAYER_ONE) {
@@ -64,18 +67,13 @@ function Home() {
         dispatch({ type: 'SET_ROLE', payload: playerIndex });
         console.log('join', { isSuccess, playerIndex });
       });
-      socket.on(
-        'chessDown',
-        ({
-          chessIndex,
-          playerIndex,
-        }: {
-          chessIndex: number;
-          playerIndex: RolesEnum;
-        }) => {
-          dispatchChessAction(playerIndex, chessIndex);
-        },
-      );
+      socket.on('chessDown', ({ chessIndex, playerIndex }: ChessDownParams) => {
+        console.log('chessDown', { chessIndex, playerIndex });
+        dispatchChessAction(playerIndex, chessIndex);
+      });
+      socket.on('restart', () => {
+        restartGame();
+      });
     }
   };
 
@@ -106,21 +104,10 @@ function Home() {
     <S.Container>
       <InfoSection
         currentRole={currentRole}
+        currentRound={currentRound}
         isGameOver={isGameOver}
-        winRole={winRole}
+        winStatus={winStatus}
       />
-      <button
-        type='button'
-        onClick={() => ws!.emit('join', roomId)}
-      >
-        加入
-      </button>
-      <button
-        type='button'
-        onClick={() => ws!.emit('leave', roomId)}
-      >
-        離開
-      </button>
       <S.ToggleModeButton onClick={handleModeChange}>
         {isMultiPlayerMode ? '多人模式' : '單人模式'}
       </S.ToggleModeButton>
@@ -131,6 +118,7 @@ function Home() {
           const disabled =
             hasSelfPlayerChess ||
             hasOtherPlayerChess ||
+            isGameOver ||
             currentRole !== currentRound;
 
           return (
