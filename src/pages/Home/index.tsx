@@ -5,6 +5,7 @@ import { RolesEnum, reducer, ticTacToeInitState } from './reducer';
 import InfoSection from '@/pages/Home/InfoSection';
 import S from './style';
 import { ChessDownParams, JoinRoomParams, StatusEnum } from './type';
+import Modal from '@/components/Modal';
 
 const CHESS_COUNTS = 9;
 const chessNumbers = [...Array(CHESS_COUNTS)].map((_, i) => i + 1);
@@ -105,7 +106,6 @@ function Home() {
       <InfoSection
         currentRole={currentRole}
         currentRound={currentRound}
-        isGameOver={isGameOver}
         winStatus={winStatus}
       />
       <S.ToggleModeButton onClick={handleModeChange}>
@@ -133,6 +133,13 @@ function Home() {
           );
         })}
       </S.Checkerboard>
+      <Modal
+        isOpen
+        onClose={() => {}}
+        title='多人遊戲'
+      >
+        加入?
+      </Modal>
       <S.RestartButton onClick={restartGame}>Restart Game</S.RestartButton>
     </S.Container>
   );

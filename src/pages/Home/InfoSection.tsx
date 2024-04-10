@@ -11,11 +11,9 @@ function InfoSection({
     const isSelf = currentRole === currentRound;
     const roleName = isSelf ? '您' : '對方';
     const isTie = winStatus === StatusEnum.IS_TIE;
-    const isSomeoneWin =
-      winStatus === StatusEnum.PLAYER_ONE_WIN ||
-      winStatus === StatusEnum.PLAYER_TWO_WIN;
+    const isGameOver = winStatus !== StatusEnum.IS_GAME_PROCESSING;
     if (isTie) return '遊戲結束：平手';
-    if (isSomeoneWin) {
+    if (isGameOver) {
       return `遊戲結束，${isSelf ? '恭喜' : ''}${roleName}獲勝`;
     }
     return `輪到${roleName}選擇`;
