@@ -3,8 +3,7 @@
   "functions": {
     "server.js": {
       "memory": 3009,
-      "maxDuration": 30,
-      "runtime": "nodejs"
+      "maxDuration": 30
     }
   }
 }
