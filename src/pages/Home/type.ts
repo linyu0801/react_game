@@ -13,7 +13,6 @@ export type InfoSectionProps = {
   currentRole: RolesEnum;
   currentRound: RolesEnum;
   winStatus: StatusEnum;
-  isGameOver: boolean;
 };
 export enum StatusEnum {
   IS_GAME_PROCESSING = 'IS_GAME_PROCESSING',
