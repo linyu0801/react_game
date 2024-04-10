@@ -63,7 +63,9 @@ export const reducer = produce(
         draft.playOneRemainSteps = getRemainSteps(draft.playOneChess);
         draft.isPlayerOneWin = isSomeoneWin(draft.playOneRemainSteps);
         draft.isGameEnd = draft.isPlayerOneWin;
-        draft.currentRound = RolesEnum.PLAYER_TWO;
+        if (!draft.isGameEnd) {
+          draft.currentRound = RolesEnum.PLAYER_TWO;
+        }
         if (draft.mode !== 'multi') {
           draft.currentRole = RolesEnum.PLAYER_TWO;
         }
@@ -74,7 +76,9 @@ export const reducer = produce(
         draft.playTwoRemainSteps = getRemainSteps(draft.playTwoChess);
         draft.isPlayerTwoWin = isSomeoneWin(draft.playTwoRemainSteps);
         draft.isGameEnd = draft.isPlayerTwoWin;
-        draft.currentRound = RolesEnum.PLAYER_ONE;
+        if (!draft.isGameEnd) {
+          draft.currentRound = RolesEnum.PLAYER_ONE;
+        }
         if (draft.mode !== 'multi') {
           draft.currentRole = RolesEnum.PLAYER_ONE;
         }
@@ -96,6 +100,10 @@ export const reducer = produce(
         draft.isPlayerOneWin = false;
         draft.isPlayerTwoWin = false;
         draft.isGameEnd = false;
+        // draft.currentRound =
+        //   draft.currentRound === RolesEnum.PLAYER_ONE
+        //     ? RolesEnum.PLAYER_TWO
+        //     : RolesEnum.PLAYER_ONE;
         // Object.assign(draft, {
         //   ...ticTacToeInitState,
         //   mode: draft.mode,
