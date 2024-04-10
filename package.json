@@ -6,7 +6,7 @@
   "homepage": ".",
   "scripts": {
     "start": "concurrently \"npm run dev\" \"npm run server\"",
-    "server": "nodemon server.js",
+    "server": "nodemon src/api/server.js",
     "dev": "cross-env NODE_ENV=development webpack serve",
     "build": "cross-env NODE_ENV=production webpack",
     "prettier": "prettier -w ./src",
@@ -81,8 +81,5 @@
     "styled-components": "^6.1.8",
     "web-vitals": "^3.5.1",
     "zustand": "^4.5.0"
-  },
-  "engines": {
-    "node": "16.x"
   }
 }
