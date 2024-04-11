@@ -2,6 +2,7 @@
 // import { Server, Socket } from 'socket.io';
 
 const express = require('express');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 
@@ -23,33 +24,48 @@ const io = require('socket.io')(server, {
 const users = {};
 
 io.on('connection', (socket) => {
-  socket.on('join', (roomId) => {
-    // 檢查房間是否已滿
+  let currentUserId = '';
+  socket.on('join', (roomId, userId) => {
+    if (!users[roomId]) {
+      users[roomId] = [];
+    }
+    const currentRoom = users[roomId];
+    const currentPlayerIndex = currentRoom.findIndex((id) => id === userId);
+    console.log({ users, userId, currentRoom, currentPlayerIndex });
 
-    if (users[roomId] && users[roomId].length >= 2) {
-      // 假設最大人數為10
+    const isInRoom = currentPlayerIndex > -1;
+    // 檢查房間是否已滿
+    if (currentRoom.length === 2 && !isInRoom) {
       socket.emit('join', {
         isSuccess: false,
+        playerIndex: 3,
       });
     } else {
-      if (!users[roomId]) {
-        users[roomId] = [];
+      currentUserId = userId || uuidv4();
+
+      if (!isInRoom) {
+        currentRoom.push(currentUserId);
       }
-      const playerIndex = users[roomId].length || 0;
-      users[roomId].push(socket.id);
-      socket.emit('join', { playerIndex, isSuccess: true });
+      console.log({
+        playerIndex: isInRoom ? currentPlayerIndex : currentRoom.length - 1,
+      });
+      socket.emit('join', {
+        userId: currentUserId,
+        playerIndex: isInRoom ? currentPlayerIndex : currentRoom.length - 1,
+        isSuccess: true,
+      });
     }
-    console.log(users, roomId);
   });
   socket.on('chessDown', (roomId, chessIndex) => {
-    const playerIndex = users[roomId].indexOf(socket.id);
+    const playerIndex = users[roomId].indexOf(currentUserId);
+    console.log({ playerIndex });
     io.sockets.emit('chessDown', { chessIndex, playerIndex });
   });
 
   socket.on('leave', (roomId) => {
     if (users[roomId]) {
       users[roomId].forEach((userId, index) => {
-        if (userId === socket.id) {
+        if (userId === currentUserId) {
           users[roomId].splice(index, 1);
         }
       });

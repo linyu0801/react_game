@@ -29,11 +29,6 @@ module.exports = {
   devtool: isDevelopment ? 'cheap-module-source-map' : 'source-map',
   module: {
     rules: [
-      // {
-      //   test: /\.s[ac]ss$/i,
-      //   exclude: /node_modules/,
-      //   use: [MiniCssExtractPlugin.loader, 'css-loader'],
-      // },
       {
         test: /\.css$/i,
         use: [MiniCssExtractPlugin.loader, 'css-loader'],

@@ -60,20 +60,24 @@ function Home() {
     }
   };
 
+  // close eslint warning
   const initWebSocket = (socket: Socket) => {
     // 對 getMessage 設定監聽，如果 server 有透過 getMessage 傳送訊息，將會在此被捕捉
     if (socket) {
-      socket.on('join', ({ isSuccess, playerIndex }: JoinRoomParams) => {
-        if (typeof playerIndex === 'undefined' || !isSuccess) return;
-        dispatch({ type: 'SET_ROLE', payload: playerIndex });
-        console.log('join', { isSuccess, playerIndex });
-      });
+      socket.on(
+        'join',
+        ({ isSuccess, playerIndex, userId }: JoinRoomParams) => {
+          if (typeof playerIndex === 'undefined' || !isSuccess) return;
+          dispatch({ type: 'SET_ROLE', payload: playerIndex });
+          sessionStorage.setItem('userId', userId);
+          console.log('join', { isSuccess, playerIndex, userId });
+        },
+      );
       socket.on('chessDown', ({ chessIndex, playerIndex }: ChessDownParams) => {
-        console.log('chessDown', { chessIndex, playerIndex });
         dispatchChessAction(playerIndex, chessIndex);
       });
       socket.on('restart', () => {
-        restartGame();
+        dispatch({ type: 'RESTART_GAME' });
       });
     }
   };
@@ -81,9 +85,10 @@ function Home() {
   useEffect(() => {
     let socket: Socket;
     if (roomId) {
+      const userId = sessionStorage.getItem('userId');
       socket = io('http://localhost:3000');
       socket.on('connect', () => {
-        socket.emit('join', roomId);
+        socket.emit('join', roomId, userId);
       });
       initWebSocket(socket);
       dispatch({ type: 'SET_SOCKET', payload: socket });
@@ -101,6 +106,9 @@ function Home() {
     dispatch({ type: 'CHANGE_MODE', payload: nextMode });
   };
 
+  useEffect(() => {
+    console.log({ currentRole });
+  }, [currentRole]);
   return (
     <S.Container>
       <InfoSection
@@ -133,13 +141,13 @@ function Home() {
           );
         })}
       </S.Checkerboard>
-      <Modal
+      {/* <Modal
         isOpen
         onClose={() => {}}
         title='多人遊戲'
       >
         加入?
-      </Modal>
+      </Modal> */}
       <S.RestartButton onClick={restartGame}>Restart Game</S.RestartButton>
     </S.Container>
   );
