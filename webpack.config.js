@@ -6,11 +6,19 @@ const TerserPlugin = require('terser-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const os = require('os');
+const webpack = require('webpack');
+const dotenv = require('dotenv');
 
 const threads = os.cpus().length; // cpu核心數
-
 const imageInlineSizeLimit = 10 * 1024;
 const isDevelopment = process.env.NODE_ENV !== 'production';
+
+const env = dotenv.config().parsed || {};
+const rawEnv = process.env || {};
+const combinedEnv = {
+  ...env,
+  ...rawEnv,
+};
 
 module.exports = {
   entry: ['./src/index.tsx'], // 設置入口
@@ -26,7 +34,7 @@ module.exports = {
     clean: true,
   },
   mode: isDevelopment ? 'development' : 'production',
-  devtool: isDevelopment ? 'cheap-module-source-map' : 'source-map',
+  devtool: isDevelopment ? 'inline-source-map' : 'source-map',
   module: {
     rules: [
       {
@@ -121,7 +129,9 @@ module.exports = {
       filename: isDevelopment ? 'css/[name].[hash].css' : 'css/[name].css',
       chunkFilename: isDevelopment ? 'css/[id].[hash].css' : 'css/[id].css',
     }),
-
+    new webpack.DefinePlugin({
+      'process.env': JSON.stringify(combinedEnv),
+    }),
     new ESLintPlugin({
       context: path.resolve(__dirname, 'src'), // 只檢查 src 底下的檔案
       // threads,

@@ -5,7 +5,7 @@ import { RolesEnum, reducer, ticTacToeInitState } from './reducer';
 import InfoSection from '@/pages/Home/InfoSection';
 import S from './style';
 import { ChessDownParams, JoinRoomParams, StatusEnum } from './type';
-import Modal from '@/components/Modal';
+// import Modal from '@/components/Modal';
 
 const CHESS_COUNTS = 9;
 const chessNumbers = [...Array(CHESS_COUNTS)].map((_, i) => i + 1);
@@ -86,7 +86,9 @@ function Home() {
     let socket: Socket;
     if (roomId) {
       const userId = sessionStorage.getItem('userId');
-      socket = io('http://localhost:3000');
+      console.log(process.env, process.env.SERVER_URL);
+      const url = `${process.env.SERVER_URL}`;
+      socket = io(url);
       socket.on('connect', () => {
         socket.emit('join', roomId, userId);
       });
@@ -106,9 +108,6 @@ function Home() {
     dispatch({ type: 'CHANGE_MODE', payload: nextMode });
   };
 
-  useEffect(() => {
-    console.log({ currentRole });
-  }, [currentRole]);
   return (
     <S.Container>
       <InfoSection
