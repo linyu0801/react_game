@@ -3,6 +3,7 @@ import { RolesEnum } from './reducer';
 export type JoinRoomParams = {
   isSuccess: boolean;
   playerIndex?: RolesEnum;
+  userId: string;
 };
 
 export type ChessDownParams = {
