@@ -1,6 +1,4 @@
-// import { createServer } from 'http';
-// import { Server, Socket } from 'socket.io';
-
+require('dotenv').config();
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 
@@ -16,7 +14,7 @@ const server = require('http')
 // 將啟動的 Server 送給 socket.io 處理
 const io = require('socket.io')(server, {
   cors: {
-    origin: 'http://localhost:8080',
+    origin: process.env.DEPLOY_DOMAIN,
     methods: ['GET', 'POST'],
   },
 });
