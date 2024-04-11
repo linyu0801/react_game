@@ -14,7 +14,7 @@ const server = require('http')
 // 將啟動的 Server 送給 socket.io 處理
 const io = require('socket.io')(server, {
   cors: {
-    origin: process.env.DEPLOY_DOMAIN,
+    origin: '*',
     methods: ['GET', 'POST'],
   },
 });
