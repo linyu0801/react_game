@@ -8,7 +8,7 @@
     "start": "concurrently \"npm run dev\" \"npm run server\"",
     "server": "nodemon src/api/server.js",
     "dev": "cross-env NODE_ENV=development webpack serve",
-    "build": "cross-env NODE_ENV=production",
+    "build": "cross-env NODE_ENV=production webpack",
     "prettier": "prettier -w ./src",
     "lint": "eslint --fix --ext=ts,tsx,js src/ --cache ",
     "format": "prettier --write . --cache",
