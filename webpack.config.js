@@ -1,26 +1,26 @@
-const path = require('path');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
-const ESLintPlugin = require('eslint-webpack-plugin');
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const os = require('os');
-const webpack = require('webpack');
-const dotenv = require('dotenv');
+import path from 'path';
+import { fileURLToPath } from 'url';
+import os from 'os';
+import webpack from 'webpack';
+import dotenv from 'dotenv';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
+import ESLintPlugin from 'eslint-webpack-plugin';
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
+import * as refreshPkg from '@pmmmwh/react-refresh-webpack-plugin';
 
+const ReactRefreshWebpackPlugin = refreshPkg.default;
 const threads = os.cpus().length; // cpu核心數
 const imageInlineSizeLimit = 10 * 1024;
 const isDevelopment = process.env.NODE_ENV !== 'production';
-
+const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
+const __dirname = path.dirname(__filename); // get the name of the directory
 const env = dotenv.config().parsed || {};
 const rawEnv = process.env || {};
-const combinedEnv = {
-  ...env,
-  ...rawEnv,
-};
+const combinedEnv = { ...env, ...rawEnv };
 
-module.exports = {
+const config = {
   entry: ['./src/index.tsx'], // 設置入口
   output: {
     filename: isDevelopment ? 'js/[name].js' : 'js/[name].[contenthash:8].js',
@@ -45,12 +45,12 @@ module.exports = {
         test: /\.(js|jsx|ts|tsx)$/,
         exclude: /node_modules/,
         use: [
-          {
-            loader: 'thread-loader', // 開啟多執行續
-            options: {
-              works: threads, // 執行續數量
-            },
-          },
+          // {
+          //   loader: 'thread-loader', // 開啟多執行續
+          //   options: {
+          //     works: threads, // 執行續數量
+          //   },
+          // },
           {
             loader: 'babel-loader',
             options: {
@@ -212,3 +212,4 @@ module.exports = {
     store: 'pack',
   },
 };
+export default config;

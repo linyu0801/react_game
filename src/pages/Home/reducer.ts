@@ -3,8 +3,9 @@ import { Socket } from 'socket.io-client';
 import { WIN_STATUS_LIST } from '@/constants/ticTacToe';
 
 export enum RolesEnum {
-  PLAYER_ONE,
-  PLAYER_TWO,
+  SPECTATORS = -1,
+  PLAYER_ONE = 0,
+  PLAYER_TWO = 1,
 }
 
 export type DispatchActionType =
@@ -65,9 +66,9 @@ export const reducer = produce(
         draft.isGameEnd = draft.isPlayerOneWin;
         if (!draft.isGameEnd) {
           draft.currentRound = RolesEnum.PLAYER_TWO;
-        }
-        if (draft.mode !== 'multi') {
-          draft.currentRole = RolesEnum.PLAYER_TWO;
+          if (draft.mode !== 'multi') {
+            draft.currentRole = RolesEnum.PLAYER_TWO;
+          }
         }
         break;
       }
