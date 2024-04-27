@@ -7,8 +7,9 @@ const app = express();
 const httpServer = http.createServer(app);
 
 type JoinEmit = {
-  isSuccess: boolean;
   playerIndex: number;
+  userId: string;
+  roomData: string[];
 };
 
 type ChessDownEmit = {
@@ -16,15 +17,27 @@ type ChessDownEmit = {
   playerIndex: number;
 };
 type ServerToClientEvents = {
-  join: ({ isSuccess, playerIndex }: JoinEmit) => void;
+  join: ({ playerIndex, userId, roomData }: JoinEmit) => void;
   chessDown: ({ chessIndex, playerIndex }: ChessDownEmit) => void;
-  restart: (message: string) => void;
+  restart: (roomData: string[]) => void;
 };
 type ClientToServerEvents = {
   join: (roomId: string) => void;
   chessDown: (roomId: string, chessIndex: number) => void;
   leave: (roomId: string) => void;
-  restart: () => void;
+  restart: (roomId: string) => void;
+};
+
+type User = {
+  [key: string]: string[];
+};
+
+const users: User = {};
+
+const getCurrentRoomId = (userData: User, id: string) => {
+  return Object.keys(userData).find((key) => {
+    return userData[key].includes(id);
+  });
 };
 
 // 將啟動的 Server 送給 socket.io 處理
@@ -38,14 +51,8 @@ const io = new socketio.Server<ClientToServerEvents, ServerToClientEvents>(
   },
 );
 
-type User = {
-  [key: string]: string[];
-};
-
-const users: User = {};
-
 io.on('connection', (socket) => {
-  socket.on('join', (roomId: string) => {
+  socket.on('join', (roomId) => {
     if (!users[roomId]) {
       users[roomId] = [];
     }
@@ -53,30 +60,24 @@ io.on('connection', (socket) => {
     const currentPlayerIndex = currentRoom.findIndex((id) => id === socket.id);
     const isInRoom = currentPlayerIndex > -1;
 
-    // 檢查房間是否已滿
-    if (currentRoom.length === 2 && !isInRoom) {
-      socket.emit('join', {
-        isSuccess: false,
-        playerIndex: -1,
-      });
-    } else {
-      if (!isInRoom) {
-        currentRoom.push(socket.id);
-      }
-
-      socket.emit('join', {
-        playerIndex: isInRoom ? currentPlayerIndex : currentRoom.length - 1,
-        isSuccess: true,
-      });
+    if (!isInRoom && currentRoom.length < 2) {
+      currentRoom.push(socket.id);
     }
+
+    socket.emit('join', {
+      playerIndex: isInRoom ? currentPlayerIndex : currentRoom.length - 1,
+      userId: socket.id,
+      roomData: currentRoom,
+    });
+
     console.log({ users, currentRoom });
   });
-  socket.on('chessDown', (roomId: string, chessIndex: number) => {
+  socket.on('chessDown', (roomId, chessIndex) => {
     const playerIndex = users[roomId].indexOf(socket.id);
     io.sockets.emit('chessDown', { chessIndex, playerIndex });
   });
 
-  socket.on('leave', (roomId: string) => {
+  socket.on('leave', (roomId) => {
     if (users[roomId]) {
       users[roomId].forEach((userId, index) => {
         if (userId === socket.id) {
@@ -86,17 +87,16 @@ io.on('connection', (socket) => {
     }
   });
   socket.on('restart', () => {
-    io.sockets.emit('restart', 'restart game!');
+    const currentRoomId = getCurrentRoomId(users, socket.id);
+    const roomData = currentRoomId ? users[currentRoomId] : [];
+    io.sockets.emit('restart', roomData);
   });
   socket.on('disconnect', () => {
-    const currentRoomId = Object.keys(users).find((key) => {
-      return users[key].includes(socket.id);
-    });
+    const currentRoomId = getCurrentRoomId(users, socket.id);
     if (currentRoomId) {
       users[currentRoomId].splice(users[currentRoomId].indexOf(socket.id), 1);
-      io.emit('restart', 'restart game!');
+      io.emit('restart', users[currentRoomId]);
     }
-    console.log('disconnect', socket.id, users);
   });
 });
 
