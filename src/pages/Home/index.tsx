@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useReducer } from 'react';
+import { useCallback, useEffect, useMemo, useReducer } from 'react';
 import { useParams } from 'react-router-dom';
 import { Socket, io } from 'socket.io-client';
 import { RolesEnum, reducer, ticTacToeInitState } from './reducer';
 import InfoSection from '@/pages/Home/InfoSection';
 import S from './style';
 import { ChessDownParams, JoinRoomParams, StatusEnum } from './type';
-// import Modal from '@/components/Modal';
 
 const CHESS_COUNTS = 9;
-const chessNumbers = [...Array(CHESS_COUNTS)].map((_, i) => i + 1);
+const chessNumbers = Array.from({ length: CHESS_COUNTS }, (_, i) => i + 1);
 
 function Home() {
   const [state, dispatch] = useReducer(reducer, ticTacToeInitState);
@@ -30,9 +29,9 @@ function Home() {
   const isGameOver = isSomeoneWin || isTie;
 
   const winStatus: StatusEnum = useMemo(() => {
-    if (isTie) return StatusEnum.IS_TIE;
     if (isPlayerOneWin) return StatusEnum.PLAYER_ONE_WIN;
     if (isPlayerTwoWin) return StatusEnum.PLAYER_TWO_WIN;
+    if (isTie) return StatusEnum.IS_TIE;
     return StatusEnum.IS_GAME_PROCESSING;
   }, [isPlayerOneWin, isPlayerTwoWin, isTie]);
 
@@ -52,56 +51,75 @@ function Home() {
     dispatch({ type: 'RESTART_GAME' });
   };
 
-  const dispatchChessAction = (role: RolesEnum, chessNumber: number) => {
-    if (role === RolesEnum.PLAYER_ONE) {
-      dispatch({ type: 'SET_PLAYER_ONE_CHESS', payload: chessNumber });
-    } else {
-      dispatch({ type: 'SET_PLAYER_TWO_CHESS', payload: chessNumber });
-    }
-  };
+  const dispatchChessAction = useCallback(
+    (role: RolesEnum, chessNumber: number) => {
+      if (role === RolesEnum.PLAYER_ONE) {
+        dispatch({ type: 'SET_PLAYER_ONE_CHESS', payload: chessNumber });
+      } else {
+        dispatch({ type: 'SET_PLAYER_TWO_CHESS', payload: chessNumber });
+      }
+    },
+    [dispatch],
+  );
 
+  console.log(currentRound);
   // close eslint warning
-  const initWebSocket = (socket: Socket) => {
-    // 對 getMessage 設定監聽，如果 server 有透過 getMessage 傳送訊息，將會在此被捕捉
-    if (socket) {
-      socket.on(
-        'join',
-        ({ isSuccess, playerIndex, userId }: JoinRoomParams) => {
-          if (typeof playerIndex === 'undefined' || !isSuccess) return;
-          dispatch({ type: 'SET_ROLE', payload: playerIndex });
-          sessionStorage.setItem('userId', userId);
-          console.log('join', { isSuccess, playerIndex, userId });
-        },
-      );
-      socket.on('chessDown', ({ chessIndex, playerIndex }: ChessDownParams) => {
-        dispatchChessAction(playerIndex, chessIndex);
-      });
-      socket.on('restart', () => {
-        dispatch({ type: 'RESTART_GAME' });
-      });
-    }
-  };
+  const initWebSocket = useCallback(
+    (socket: Socket) => {
+      // 對 getMessage 設定監聽，如果 server 有透過 getMessage 傳送訊息，將會在此被捕捉
+      if (socket) {
+        socket.on(
+          'join',
+          ({ isSuccess, playerIndex, userId }: JoinRoomParams) => {
+            if (typeof playerIndex === 'undefined') return;
+            dispatch({ type: 'SET_ROLE', payload: playerIndex });
+            console.log('join', { isSuccess, playerIndex, userId });
+          },
+        );
+        socket.on(
+          'chessDown',
+          ({ chessIndex, playerIndex }: ChessDownParams) => {
+            dispatchChessAction(playerIndex, chessIndex);
+          },
+        );
+        socket.on('restart', () => dispatch({ type: 'RESTART_GAME' }));
+      }
+    },
+    [dispatch, dispatchChessAction],
+  );
 
   useEffect(() => {
     let socket: Socket;
     if (roomId) {
-      const userId = sessionStorage.getItem('userId');
-      console.log(process.env, process.env.SERVER_URL);
       const url = `${process.env.SERVER_URL}`;
       socket = io(url);
       socket.on('connect', () => {
-        socket.emit('join', roomId, userId);
+        socket.emit('join', roomId);
       });
       initWebSocket(socket);
       dispatch({ type: 'SET_SOCKET', payload: socket });
       dispatch({ type: 'CHANGE_MODE', payload: 'multi' });
     }
+
+    // Cleanup function
     return () => {
       if (socket) {
         socket.emit('disconnect', roomId);
       }
     };
-  }, [roomId]);
+  }, [roomId, initWebSocket]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (ws) {
+        ws.disconnect();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [ws, roomId]);
 
   const handleModeChange = () => {
     const nextMode = isMultiPlayerMode ? 'multi' : 'single';
@@ -114,6 +132,7 @@ function Home() {
         currentRole={currentRole}
         currentRound={currentRound}
         winStatus={winStatus}
+        mode={mode}
       />
       <S.ToggleModeButton onClick={handleModeChange}>
         {isMultiPlayerMode ? '多人模式' : '單人模式'}
@@ -126,7 +145,8 @@ function Home() {
             hasSelfPlayerChess ||
             hasOtherPlayerChess ||
             isGameOver ||
-            currentRole !== currentRound;
+            currentRole !== currentRound ||
+            currentRole === RolesEnum.SPECTATORS;
 
           return (
             <S.Chess

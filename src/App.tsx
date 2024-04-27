@@ -10,15 +10,15 @@ const StyledContainer = styled.main`
   padding: 0 16px;
   display: flex;
   align-items: center;
+  min-height: 100dvh;
 `;
 const GlobalStyle = createGlobalStyle`
   body {
-    font-family: 'Noto Sans TC', sans-serif;
     background-color: ${(props) => props.theme.background};
-    min-height:100dvh;
     margin: 0;
   }
 `;
+
 function App() {
   return (
     <ThemeProvider theme={themes.default}>

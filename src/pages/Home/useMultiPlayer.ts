@@ -10,40 +10,45 @@ type Props = {
   isMultiPlayerMode: boolean;
 };
 
+const initWebSocket = (
+  socket: Socket,
+  dispatch: React.Dispatch<DispatchActionType>,
+) => {
+  //  設定監聽
+  if (socket) {
+    socket.on('join', ({ isSuccess, playerIndex }: JoinRoomParams) => {
+      if (typeof playerIndex === 'undefined' || !isSuccess) return;
+      dispatch({ type: 'SET_ROLE', payload: playerIndex });
+    });
+    socket.on('chessDown', ({ chessIndex, playerIndex }: ChessDownParams) => {
+      if (playerIndex === RolesEnum.PLAYER_ONE) {
+        dispatch({ type: 'SET_PLAYER_ONE_CHESS', payload: chessIndex });
+      } else {
+        dispatch({ type: 'SET_PLAYER_TWO_CHESS', payload: chessIndex });
+      }
+    });
+    socket.on('restart', () => {
+      dispatch({ type: 'RESTART_GAME' });
+    });
+  }
+};
+
 const useMultiPlayer = ({
   dispatch,
-  currentRole,
-  isMultiPlayerMode,
+  // currentRole,
+  // isMultiPlayerMode,
 }: Props) => {
   const { roomId } = useParams();
-  const initWebSocket = (socket: Socket) => {
-    //  設定監聽
-    if (socket) {
-      socket.on('join', ({ isSuccess, playerIndex }: JoinRoomParams) => {
-        if (typeof playerIndex === 'undefined' || !isSuccess) return;
-        dispatch({ type: 'SET_ROLE', payload: playerIndex });
-      });
-      socket.on('chessDown', ({ chessIndex, playerIndex }: ChessDownParams) => {
-        if (playerIndex === RolesEnum.PLAYER_ONE) {
-          dispatch({ type: 'SET_PLAYER_ONE_CHESS', payload: chessIndex });
-        } else {
-          dispatch({ type: 'SET_PLAYER_TWO_CHESS', payload: chessIndex });
-        }
-      });
-      socket.on('restart', () => {
-        dispatch({ type: 'RESTART_GAME' });
-      });
-    }
-  };
 
   useEffect(() => {
     let socket: Socket;
+
     if (roomId) {
       socket = io('http://localhost:3000');
       socket.on('connect', () => {
         socket.emit('join', roomId);
       });
-      initWebSocket(socket);
+      initWebSocket(socket, dispatch);
       dispatch({ type: 'SET_SOCKET', payload: socket });
       dispatch({ type: 'CHANGE_MODE', payload: 'multi' });
     }
@@ -52,7 +57,7 @@ const useMultiPlayer = ({
         socket.emit('disconnect', roomId);
       }
     };
-  }, [roomId]);
+  }, [roomId, dispatch]);
 };
 
 export default useMultiPlayer;
