@@ -4,6 +4,7 @@ export type JoinRoomParams = {
   isSuccess: boolean;
   playerIndex?: RolesEnum;
   userId: string;
+  roomData: string[];
 };
 
 export type ChessDownParams = {

@@ -101,15 +101,7 @@ export const reducer = produce(
         draft.isPlayerOneWin = false;
         draft.isPlayerTwoWin = false;
         draft.isGameEnd = false;
-        // draft.currentRound =
-        //   draft.currentRound === RolesEnum.PLAYER_ONE
-        //     ? RolesEnum.PLAYER_TWO
-        //     : RolesEnum.PLAYER_ONE;
-        // Object.assign(draft, {
-        //   ...ticTacToeInitState,
-        //   mode: draft.mode,
-        //   ws: draft.ws,
-        // });
+        draft.currentRound = RolesEnum.PLAYER_ONE;
         break;
       }
       case 'SET_SOCKET': {

@@ -62,27 +62,28 @@ function Home() {
     [dispatch],
   );
 
-  console.log(currentRound);
-  // close eslint warning
   const initWebSocket = useCallback(
     (socket: Socket) => {
       // 對 getMessage 設定監聽，如果 server 有透過 getMessage 傳送訊息，將會在此被捕捉
       if (socket) {
-        socket.on(
-          'join',
-          ({ isSuccess, playerIndex, userId }: JoinRoomParams) => {
-            if (typeof playerIndex === 'undefined') return;
-            dispatch({ type: 'SET_ROLE', payload: playerIndex });
-            console.log('join', { isSuccess, playerIndex, userId });
-          },
-        );
+        let socketId = '';
+        socket.on('join', ({ userId, roomData }: JoinRoomParams) => {
+          socketId = userId;
+          const playerIndex = roomData.indexOf(userId);
+          if (typeof playerIndex === 'undefined') return;
+          dispatch({ type: 'SET_ROLE', payload: playerIndex });
+        });
         socket.on(
           'chessDown',
           ({ chessIndex, playerIndex }: ChessDownParams) => {
             dispatchChessAction(playerIndex, chessIndex);
           },
         );
-        socket.on('restart', () => dispatch({ type: 'RESTART_GAME' }));
+        socket.on('restart', (roomData: string[]) => {
+          dispatch({ type: 'RESTART_GAME' });
+          const playerIndex = roomData.indexOf(socketId);
+          dispatch({ type: 'SET_ROLE', payload: playerIndex });
+        });
       }
     },
     [dispatch, dispatchChessAction],
@@ -160,13 +161,6 @@ function Home() {
           );
         })}
       </S.Checkerboard>
-      {/* <Modal
-        isOpen
-        onClose={() => {}}
-        title='多人遊戲'
-      >
-        加入?
-      </Modal> */}
       <S.RestartButton onClick={restartGame}>Restart Game</S.RestartButton>
     </S.Container>
   );
