@@ -8,6 +8,7 @@
   "extends": [
     "airbnb",
     "airbnb-typescript",
+    "airbnb/hooks",
     "plugin:@typescript-eslint/recommended",
     "plugin:react/jsx-runtime",
     "plugin:prettier/recommended"
@@ -32,7 +33,7 @@
     "react/no-array-index-key": "warn",
     "@typescript-eslint/no-var-requires": "off",
     "no-use-before-define": "off",
-    "@typescript-eslint/no-use-before-define": ["off"],
+    "@typescript-eslint/no-use-before-define": "off",
     "@typescript-eslint/no-unused-vars": "warn",
     "react/require-default-props": ["off"],
     "no-param-reassign": [
