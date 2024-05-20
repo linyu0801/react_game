@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import styled from 'styled-components';
-import { InfoSectionProps, StatusEnum } from './type';
 import { RolesEnum } from './reducer';
+import { InfoSectionProps, StatusEnum } from './type';
 
 function InfoSection({
   currentRole,
@@ -31,7 +31,7 @@ function InfoSection({
   return (
     <StyledInfoText>
       <StyledTitle>圈圈叉叉小遊戲</StyledTitle>
-      {description}
+      <p>{description}</p>
     </StyledInfoText>
   );
 }

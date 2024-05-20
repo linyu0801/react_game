@@ -1,4 +1,6 @@
-const defaultTheme = {
+import { Theme } from './type';
+
+const defaultTheme: Theme = {
   color: 'white',
   background: 'rgb(157, 169, 160)',
   chess: {
@@ -13,6 +15,7 @@ const defaultTheme = {
     hover: '#7EB2DD',
     active: '',
   },
+  loader: '#3e6259',
 };
 
 export default defaultTheme;

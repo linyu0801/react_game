@@ -3,6 +3,7 @@ import { BrowserRouter, useRoutes } from 'react-router-dom';
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import routerConfig from './router/index';
 import themes from './theme';
+import Loading from './components/Loading';
 
 const Router = () => useRoutes(routerConfig);
 
@@ -22,8 +23,8 @@ const GlobalStyle = createGlobalStyle`
 function App() {
   return (
     <ThemeProvider theme={themes.default}>
-      <Suspense fallback={<div> loading...</div>}>
-        <GlobalStyle />
+      <GlobalStyle />
+      <Suspense fallback={<Loading />}>
         <StyledContainer>
           <BrowserRouter>
             <Router />

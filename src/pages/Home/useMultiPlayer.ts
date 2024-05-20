@@ -33,11 +33,7 @@ const initWebSocket = (
   }
 };
 
-const useMultiPlayer = ({
-  dispatch,
-  // currentRole,
-  // isMultiPlayerMode,
-}: Props) => {
+const useMultiPlayer = ({ dispatch }: Props) => {
   const { roomId } = useParams();
 
   useEffect(() => {
