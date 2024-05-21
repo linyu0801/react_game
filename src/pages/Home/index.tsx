@@ -161,7 +161,7 @@ function Home() {
           );
         })}
       </S.Checkerboard>
-      <S.RestartButton onClick={restartGame}>Restart Game</S.RestartButton>
+      <S.RestartButton onClick={restartGame}>重新開始</S.RestartButton>
     </S.Container>
   );
 }

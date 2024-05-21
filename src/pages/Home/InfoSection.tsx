@@ -11,20 +11,19 @@ function InfoSection({
 }: InfoSectionProps) {
   const description = useMemo(() => {
     if (currentRole === RolesEnum.SPECTATORS) return '觀戰者';
-    // playerName
-    const singlePlayerName =
-      currentRole === RolesEnum.PLAYER_ONE ? '玩家一' : '玩家二';
-    const isSelf = currentRole === currentRound;
-    const multiPlayerName = isSelf ? '您' : '對方';
-    const playerName = mode === 'single' ? singlePlayerName : multiPlayerName;
     // status
     const isTie = winStatus === StatusEnum.IS_TIE;
     const isGameOver = winStatus !== StatusEnum.IS_GAME_PROCESSING;
-
     if (isTie) return '遊戲結束：平手';
     if (isGameOver) {
-      return `遊戲結束，${playerName}獲勝`;
+      return `遊戲結束，玩家${winStatus === StatusEnum.PLAYER_ONE_WIN ? '一' : '二'}獲勝`;
     }
+    // playerName
+    const singlePlayerName =
+      currentRole === RolesEnum.PLAYER_ONE ? '玩家一' : '玩家二';
+    const multiPlayerName = currentRole === currentRound ? '您' : '對方';
+    const playerName = mode === 'single' ? singlePlayerName : multiPlayerName;
+
     return `輪到${playerName}選擇`;
   }, [currentRole, winStatus, currentRound, mode]);
 
